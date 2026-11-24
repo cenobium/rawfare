@@ -237,6 +237,43 @@ local function makeLibrary(Native)
         Padding = UDim.new(0, 4),
         Parent = library.NotificationArea,
     })
+    library.KeypickerListMode = "Active"
+    library.KeypickerListVisible = false
+    library.KeybindFrame = library:Create("Frame", {
+        Name = "KeybindList",
+        BackgroundColor3 = library.MainColor,
+        BorderColor3 = library.OutlineColor,
+        Position = UDim2.new(1, -8, 0, 42),
+        AnchorPoint = Vector2.new(1, 0),
+        Size = UDim2.fromOffset(210, 23),
+        Visible = false,
+        Parent = screenGui,
+    })
+    library:CreateLabel({
+        Position = UDim2.fromOffset(6, 1),
+        Size = UDim2.new(1, -12, 0, 20),
+        Text = "Keybinds",
+        TextColor3 = library.AccentColor,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = library.KeybindFrame,
+    })
+    library.KeybindContainer = library:Create("Frame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(5, 22),
+        Size = UDim2.new(1, -10, 1, -24),
+        Parent = library.KeybindFrame,
+    })
+    library:Create("UIListLayout", {
+        FillDirection = Enum.FillDirection.Vertical,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 1),
+        Parent = library.KeybindContainer,
+    })
+    library:AddToRegistry(library.KeybindFrame, {
+        BackgroundColor3 = "MainColor",
+        BorderColor3 = "OutlineColor",
+    })
     library.Watermark = library:Create("Frame", {
         BackgroundColor3 = library.MainColor,
         BorderColor3 = library.OutlineColor,
