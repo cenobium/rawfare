@@ -12,7 +12,7 @@ A compact Roblox Luau UI library based on the LinoriaLib architecture.
 ## Run the showcase
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/Example.lua?update=foundation-touchfix-20261124"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/Example.lua?update=foundation-global-touch-input-20261124"))()
 ```
 
 ## Load the library in your own script
