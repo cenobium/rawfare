@@ -177,7 +177,6 @@ local function makeLibrary(Native)
     extend()
     library.Captures = captures
     library.Native = Native
-    library:ApplyLayout = nil
     library.CaptureState = state
     library:CreateEvent("VisibilityChanged")
     function library:ApplyLayout()
