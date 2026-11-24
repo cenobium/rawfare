@@ -1119,6 +1119,14 @@ local function makeGroupbox(tab, name, side)
         }
         dependency.Groupbox = makeGroupbox(adapter, name or "Dependent controls", 1)
         dependency.Groupbox.Outer.Parent = container
+        local nativeDependencyRemove = dependency.Remove
+        function dependency:Remove()
+            if self.Groupbox and self.Groupbox.Remove then
+                self.Groupbox:Remove()
+            end
+            nativeDependencyRemove(self)
+            groupbox:Resize()
+        end
         for _, method in ipairs({
             "AddToggle",
             "AddSlider",
