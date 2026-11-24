@@ -54,9 +54,13 @@ Main:AddButton({
         Library:Notify("UI Reborn is working", 3)
     end
 })
-Right:AddLabel("Color"):AddColorPicker("DemoColor", {
+Right:AddLabel("Accent color"):AddColorPicker("DemoColor", {
     Default = Color3.fromRGB(145, 190, 255),
-    Title = "Accent color"
+    Title = "Accent color",
+    Callback = function(color)
+        Library.AccentColor = color
+        Library:UpdateColorsUsingRegistry()
+    end
 })
 Right:AddLabel("Menu key"):AddKeyPicker("MenuKey", {
     Default = "RightControl",
@@ -70,39 +74,71 @@ Right:AddInput("DemoInput", {
     Placeholder = "Type here",
     Finished = false
 })
-Right:AddButton({
-    Text = "Toggle UI",
-    Func = function()
-        Library:Toggle()
-    end
-})
-Right:AddButton({
-    Text = "Lock / Unlock UI",
-    Func = function()
-        local locked = Library:ToggleLock()
-        Library:Notify(locked and "UI position locked" or "UI position unlocked", 2)
-    end
-})
-
 local Settings = Tabs.Settings:AddLeftGroupbox("Interface")
-Settings:AddButton({
-    Text = "Toggle UI",
-    Func = function()
-        Library:Toggle()
-    end
-})
-Settings:AddToggle("LockUI", {
-    Text = "Lock UI position",
-    Default = false,
-    Callback = function(value)
-        Library:SetLocked(value)
-    end
-})
-Settings:AddLabel("Restore: RightControl")
-Settings:AddLabel("Mobile: two-finger touch")
+Settings:AddLabel("Use the floating screen controls.")
+Settings:AddLabel("RightControl also toggles the window.")
+Settings:AddLabel("Two-finger touch is supported.")
 Settings:AddButton({
     Text = "Unload library",
     Func = function()
         Library:Unload()
     end
 })
+local Parent = Library.ScreenGui.Parent
+local PreviousDock = Parent:FindFirstChild("UIRebornControls")
+if PreviousDock then
+    PreviousDock:Destroy()
+end
+
+local DockGui = Instance.new("ScreenGui")
+DockGui.Name = "UIRebornControls"
+DockGui.IgnoreGuiInset = true
+DockGui.ResetOnSpawn = false
+DockGui.DisplayOrder = 10000
+DockGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+DockGui.Parent = Parent
+
+local Dock = Instance.new("Frame")
+Dock.Name = "Controls"
+Dock.AnchorPoint = Vector2.new(1, 0.5)
+Dock.Position = UDim2.new(1, -12, 0.46, 0)
+Dock.Size = UDim2.fromOffset(116, 78)
+Dock.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+Dock.BorderColor3 = Color3.fromRGB(145, 190, 255)
+Dock.BorderSizePixel = 1
+Dock.Parent = DockGui
+
+local function MakeDockButton(name, text, y)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Position = UDim2.fromOffset(4, y)
+    button.Size = UDim2.new(1, -8, 0, 32)
+    button.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    button.BorderColor3 = Color3.fromRGB(55, 55, 55)
+    button.TextColor3 = Color3.fromRGB(245, 245, 245)
+    button.TextSize = 13
+    button.Font = Enum.Font.Gotham
+    button.Text = text
+    button.AutoButtonColor = true
+    button.Parent = Dock
+    return button
+end
+
+local ToggleButton = MakeDockButton("ToggleUI", "HIDE / SHOW", 4)
+local LockButton = MakeDockButton("LockUI", "LOCK: OFF", 41)
+
+ToggleButton.Activated:Connect(function()
+    Library:Toggle()
+end)
+
+LockButton.Activated:Connect(function()
+    local locked = Library:ToggleLock()
+    LockButton.Text = locked and "LOCK: ON" or "LOCK: OFF"
+end)
+
+Library:GiveSignal(DockGui.Destroying:Connect(function()
+    if Library.ScreenGui and Library.ScreenGui.Parent then
+        Library.ScreenGui:Destroy()
+    end
+end))
+
