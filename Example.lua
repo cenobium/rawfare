@@ -69,7 +69,12 @@ Main:AddMultiDropdown("DemoTargetParts", {
     Default = {"Head", "Right Hand"},
     MaxSelections = 3,
     Callback = function(values)
-        print("Selected parts: " .. table.concat(values, ", "))
+        local selected = {}
+        for name, enabled in pairs(values) do
+            if enabled then table.insert(selected, name) end
+        end
+        table.sort(selected)
+        print("Selected parts: " .. table.concat(selected, ", "))
     end
 })
 Main:AddButton({
