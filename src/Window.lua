@@ -303,6 +303,13 @@ local function makeGroupbox(tab, name, side)
         })
         register(library, mark, {BackgroundColor3 = "AccentColor"})
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Toggle", "Toggle", config.Default == true, config.Callback or callback)
+        local boxEntry = library.RegistryMap[box]
+        boxEntry.Properties.BackgroundColor3 = function()
+            return option.Value and library.AccentColor or library.MainColor
+        end
+        boxEntry.Properties.BorderColor3 = function()
+            return option.Value and library.AccentColorDark or library.OutlineColor
+        end
         function option:Display()
             mark.Visible = self.Value
             box.BackgroundColor3 = self.Value and library.AccentColor or library.MainColor
@@ -1203,6 +1210,10 @@ function Window.attach(library, settings)
             }
             local initializeTab = nativeTab(nativeCaptures)
             initializeTab()
+            local tabTextEntry = library.RegistryMap[tabText]
+            tabTextEntry.Properties.TextColor3 = function()
+                return library.ActiveTab == name and library.FontColor or library:GetDarkerColor(library.FontColor)
+            end
             local nativeRemove = tab.Remove
             function tab:Remove()
                 local wasActive = library.ActiveTab == name
