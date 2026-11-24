@@ -126,10 +126,10 @@ function Library:SafeCallback(f, ...)
 end;
 
 function Library:AttemptSave()
-    if Library.SaveManager then
-        Library.SaveManager:Save();
-    end;
-end;
+    if Library.SaveManager and Library.SaveManager.CurrentConfig then
+        Library.SaveManager:Save(Library.SaveManager.CurrentConfig)
+    end
+end
 
 function Library:Create(Class, Properties)
     local _Instance = Class;
@@ -3866,6 +3866,7 @@ function SaveManager:SetFolder(folder)
 end
 
 function SaveManager:SetIgnoreIndexes(indexes)
+    self.Ignore = {}
     for _, index in ipairs(indexes) do self.Ignore[index] = true end
 end
 
@@ -3931,24 +3932,35 @@ function SaveManager:Import(encoded)
     if not ok or type(data) ~= "table" or type(data.objects) ~= "table" then
         return false, "invalid configuration data"
     end
+    local failures = {}
     for _, item in ipairs(data.objects) do
-        local parser = Parsers[item.type]
+        local parser = type(item) == "table" and Parsers[item.type]
         if parser then
-            pcall(parser.Load, self, item)
+            local loaded, err = pcall(parser.Load, self, item)
+            if not loaded then
+                table.insert(failures, tostring(item.idx or item.type) .. ": " .. tostring(err))
+            end
         end
+    end
+    if #failures > 0 then
+        return false, table.concat(failures, "; ")
     end
     return true
 end
 
 function SaveManager:Save(name)
+    name = name or self.CurrentConfig
     if type(name) ~= "string" or name:gsub("[%s%p]", "") == "" then return false, "enter a config name" end
     if name:find("[/\\]") or #name > 48 then return false, "invalid config name" end
+    local ready, folderError = self:BuildFolderTree()
+    if not ready then return false, folderError or "could not create config folder" end
     local writefile = envfn("writefile")
     if not writefile then return false, "writefile is unavailable" end
     local encoded, err = self:Export()
     if not encoded then return false, err end
     local ok, result = pcall(writefile, self.Folder .. "/settings/" .. name .. ".json", encoded)
     if not ok then return false, tostring(result) end
+    self.CurrentConfig = name
     return true
 end
 
@@ -3959,7 +3971,9 @@ function SaveManager:Load(name)
     if not readfile or not isfile or not isfile(path) then return false, "config file not found" end
     local ok, content = pcall(readfile, path)
     if not ok then return false, tostring(content) end
-    return self:Import(content)
+    local loaded, err = self:Import(content)
+    if loaded then self.CurrentConfig = name end
+    return loaded, err
 end
 
 function SaveManager:Delete(name)
@@ -3967,6 +3981,7 @@ function SaveManager:Delete(name)
     local path = self.Folder .. "/settings/" .. tostring(name) .. ".json"
     if not delfile or not isfile or not isfile(path) then return false, "config file not found or deletefile unavailable" end
     local ok, err = pcall(delfile, path)
+    if ok and self.CurrentConfig == name then self.CurrentConfig = nil end
     return ok, ok and nil or tostring(err)
 end
 
@@ -3985,6 +4000,9 @@ function SaveManager:RefreshConfigList()
 end
 
 function SaveManager:SetAutoload(name)
+    if type(name) ~= "string" or name == "" or name:find("[/\\]") then return false, "invalid config name" end
+    local ready, folderError = self:BuildFolderTree()
+    if not ready then return false, folderError or "could not create config folder" end
     local writefile = envfn("writefile")
     if not writefile then return false, "writefile is unavailable" end
     local ok, err = pcall(writefile, self.Folder .. "/settings/autoload.txt", name)
@@ -4137,6 +4155,9 @@ function ThemeManager:ApplyTheme(name)
 end
 
 function ThemeManager:SaveDefault(name)
+    if type(name) ~= "string" or name == "" then return false, "select a theme" end
+    local ready = self:BuildFolderTree()
+    if not ready then return false, "theme folder is unavailable" end
     local writefile = envfn("writefile")
     if not writefile then return false, "writefile unavailable" end
     local ok, err = pcall(writefile, self.Folder .. "/themes/default.txt", name)
@@ -4169,6 +4190,8 @@ function ThemeManager:SaveCustomTheme(name)
     if not writefile then return false, "writefile unavailable" end
     local data = {}
     for _, field in ipairs(self.Fields) do data[field] = self.Library[field]:ToHex() end
+    local ready = self:BuildFolderTree()
+    if not ready then return false, "theme folder is unavailable" end
     local ok, err = pcall(writefile, self.Folder .. "/themes/" .. name .. ".json", HttpService:JSONEncode(data))
     return ok, ok and nil or tostring(err)
 end
