@@ -871,6 +871,10 @@ local function makeGroupbox(tab, name, side)
             [24] = {Frame = alphaBar},
         })
         initialize()
+        local alphaEntry = library.RegistryMap[alphaBar]
+        alphaEntry.Properties.BackgroundColor3 = function()
+            return option.Value
+        end
         local updatePosition = function()
             popup.Position = UDim2.fromOffset(swatch.AbsolutePosition.X - popup.AbsoluteSize.X + swatch.AbsoluteSize.X, swatch.AbsolutePosition.Y + swatch.AbsoluteSize.Y + 2)
         end
