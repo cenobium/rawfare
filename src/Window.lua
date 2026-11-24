@@ -1593,6 +1593,11 @@ function Window.attach(library, settings)
             function tab:Remove()
                 local wasActive = library.ActiveTab == name
                 local index = table.find(window.Tabs, self)
+                for _, group in ipairs(self.Groupboxes or {}) do
+                    if group and group.Remove then
+                        group:Remove()
+                    end
+                end
                 nativeRemove(self)
                 if page.Parent then
                     page:Destroy()
