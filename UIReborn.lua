@@ -7,6 +7,9 @@ local Teams = game:GetService('Teams');
 local Players = game:GetService('Players');
 local RunService = game:GetService('RunService')
 local TweenService = game:GetService('TweenService');
+local LightingService = game:GetService('Lighting');
+local StaleBlur = LightingService:FindFirstChild('UIRebornBlur');
+if StaleBlur then StaleBlur:Destroy() end
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
@@ -197,7 +200,6 @@ function Library:MakeDraggable(Instance, Cutoff)
             and Point.Y >= Position.Y and Point.Y <= Position.Y + (Cutoff or 40)
     end
 
-    self = Library
     Library:GiveSignal(InputService.InputBegan:Connect(function(Input)
         local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
         local IsMouse = Input.UserInputType == Enum.UserInputType.MouseButton1
