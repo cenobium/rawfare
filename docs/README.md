@@ -13,7 +13,7 @@ local Window = Library:CreateWindow({
     Title = "My interface",
     Center = true,
     AutoShow = true,
-    Size = UDim2.fromOffset(440, 340),
+    Size = UDim2.fromOffset(560, 300),
     TabPadding = 5,
     MenuFadeTime = 0.15
 })
@@ -121,6 +121,20 @@ print(Options.Power.Value)
 Options.Mode:SetValue("Two")
 print(Options.Mode.Value)
 ```
+
+## Window controls
+
+The example provides a **Toggle UI** button. It hides the complete window; restore it with RightControl or the two-finger touch gesture.
+
+Use the lock methods to prevent accidental movement:
+
+```lua
+Library:SetLocked(true)
+Library:SetLocked(false)
+Library:ToggleLock()
+```
+
+The Settings showcase includes a **Lock UI position** toggle wired to `SetLocked`.
 
 ## Unload
 
