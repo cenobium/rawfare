@@ -140,4 +140,39 @@ help:AddLabel("Drag the title area to move the window")
 help:AddLabel("Use the bottom-right corner to resize")
 help:AddLabel("Press RightControl to hide or restore it")
 
+local configs = settings:AddRightGroupbox("Configuration")
+local configName = configs:AddInput({
+    Text = "Config name",
+    Flag = "Config_Name",
+    Default = "default",
+})
+configs:AddButton({
+    Text = "Save config",
+    Func = function()
+        local ok, saved, result = pcall(Library.SaveManager.Save, Library.SaveManager, configName.Value)
+        Library:Notify(ok and saved and "Config saved" or (ok and result or "Config save failed"), 3)
+    end,
+})
+configs:AddButton({
+    Text = "Load config",
+    Func = function()
+        local ok, loaded, result = pcall(Library.SaveManager.Load, Library.SaveManager, configName.Value)
+        Library:Notify(ok and loaded and "Config loaded" or (ok and result or "Config load failed"), 3)
+    end,
+})
+configs:AddButton({
+    Text = "Delete config",
+    Func = function()
+        local ok, deleted, result = pcall(Library.SaveManager.Delete, Library.SaveManager, configName.Value)
+        Library:Notify(ok and deleted and "Config deleted" or (ok and result or "Config delete failed"), 3)
+    end,
+})
+configs:AddButton({
+    Text = "Load autoload config",
+    Func = function()
+        local ok = pcall(Library.SaveManager.LoadAutoloadConfig, Library.SaveManager)
+        Library:Notify(ok and "Autoload checked" or "Autoload failed", 3)
+    end,
+})
+
 print("[UI Reborn Enhancement] loaded")
