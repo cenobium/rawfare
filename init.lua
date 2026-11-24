@@ -100,7 +100,7 @@ appearance:AddSlider({
 })
 
 local controls = main:AddLeftGroupbox("Control Showcase")
-controls:AddToggle({
+local demoToggle = controls:AddToggle({
     Text = "Example toggle",
     Flag = "Demo_Toggle",
     Default = false,
@@ -127,6 +127,8 @@ controls:AddKeyPicker({
     Text = "Example key",
     Flag = "Demo_Key",
     Default = Enum.KeyCode.G,
+    Parent = demoToggle,
+    SyncToggleState = true,
 })
 controls:AddInput({
     Text = "Example input",
