@@ -4656,13 +4656,6 @@ function Library:CreateFloatingControls()
     Lock.Text = 'LOCK: OFF'
     Lock.Parent = Dock
 
-    Toggle.Activated:Connect(function() self:Toggle() end)
-    Lock.Activated:Connect(function()
-        local Locked = self:ToggleLock()
-        Lock.Text = Locked and 'LOCK: ON' or 'LOCK: OFF'
-        Drag.Text = Locked and 'UI REBORN CONTROLS | LOCKED' or 'UI REBORN CONTROLS'
-    end)
-
     local Input = game:GetService('UserInputService')
     local Dragging = false
     local TouchId
@@ -4688,7 +4681,6 @@ function Library:CreateFloatingControls()
         local IsTouch = Began.UserInputType == Enum.UserInputType.Touch
         local IsMouse = Began.UserInputType == Enum.UserInputType.MouseButton1
         if not IsTouch and not IsMouse then return end
-        if self.Locked then return end
         local Point
         if IsTouch then
             Point = Vector2.new(Began.Position.X, Began.Position.Y)
@@ -4696,6 +4688,27 @@ function Library:CreateFloatingControls()
             local MousePoint = Input:GetMouseLocation()
             Point = Vector2.new(MousePoint.X, MousePoint.Y)
         end
+
+        local function IsInside(Control)
+            local Position = Control.AbsolutePosition
+            local Size = Control.AbsoluteSize
+            return Point.X >= Position.X and Point.X <= Position.X + Size.X
+                and Point.Y >= Position.Y and Point.Y <= Position.Y + Size.Y
+        end
+
+        if IsInside(Toggle) then
+            task.spawn(function() self:Toggle() end)
+            return
+        end
+
+        if IsInside(Lock) then
+            local Locked = self:ToggleLock()
+            Lock.Text = Locked and 'LOCK: ON' or 'LOCK: OFF'
+            Drag.Text = Locked and 'UI REBORN CONTROLS | LOCKED' or 'UI REBORN CONTROLS'
+            return
+        end
+
+        if self.Locked then return end
         if not IsOnDragHandle(Point) then return end
         Dragging = true
         TouchId = IsTouch and Began.TouchId or nil
