@@ -4116,20 +4116,23 @@ end
 function ThemeManager:ApplyTheme(name)
     local theme = self.BuiltInThemes[name] or self:GetCustomTheme(name)
     if not theme then return false, "theme not found" end
+    self.Applying = true
     for _, field in ipairs(self.Fields) do
         if theme[field] then
             local color = Color3.fromHex(theme[field])
             self.Library[field] = color
-            local option = self.Library.Options and self.Library.Options[field]
+            local options = self.Library.Options or {}
+            local option = options["UIReborn_" .. field] or options[field]
             if option and option.SetValueRGB then
                 option:SetValueRGB(color)
             end
         end
     end
     self:ThemeUpdate()
-    if self.Library.Options.ThemeManager_ThemeList then
-        self.Library.Options.ThemeManager_ThemeList.Value = name
-    end
+    local options = self.Library.Options or {}
+    local themeOption = options.UIReborn_ThemeList or options.ThemeManager_ThemeList
+    if themeOption then themeOption.Value = name end
+    self.Applying = false
     return true
 end
 
