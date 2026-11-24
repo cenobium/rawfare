@@ -319,12 +319,7 @@ Upstream reference: https://github.com/violin-suzutsuki/LinoriaLib
 
 ## Settings, ThemeManager and SaveManager
 
-The showcase loads two companion managers from `addons/`:
-
-- `addons/SaveManager.lua` - JSON config serialization, local save/load/delete, refresh, autoload, clipboard import/export, and community config loading.
-- `addons/ThemeManager.lua` - built-in themes, custom theme save/load, theme defaults, and live registry refresh.
-
-Both managers are initialized with `SetLibrary(Library)` and share the library's `Toggles` and `Options` registries. The default storage folder is `UIReborn`.
+`SaveManager` and `ThemeManager` are bundled directly inside `UIReborn.lua` and exposed as `Library.SaveManager` and `Library.ThemeManager`. They share the library's `Toggles` and `Options` registries. The default storage folder is `UIReborn`.
 
 ### Settings tab
 
@@ -399,4 +394,4 @@ ThemeManager:SaveDefault("My theme")
 ThemeManager:GetDefault()
 ```
 
-The manager modules are companion modules; the core `UIReborn.lua` remains independently loadable. The showcase fetches the manager modules before building Settings.
+Both managers are part of the single-file `UIReborn.lua` library. The showcase loads only the core library before building Settings.
