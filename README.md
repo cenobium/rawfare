@@ -1,21 +1,43 @@
-# Rawfare UI Library
+# UI Reborn Enhancement
 
-A clean, reusable Roblox Luau UI library based on the user's supplied classic executor-style reference.
+A Roblox Luau interface rebuild using the supplied Rivals UE UI library as
+the visual and component reference.
 
-The project focuses on interface infrastructure: compact rectangular window geometry, horizontal tabs, two-column content, drag/resize behavior, touch support, theming, and reusable controls.
+The target is the original compact horizontal rectangle, original typography,
+themes, tabs, controls, and touch interactions. This repository is rebuilding
+the UI layer only.
 
-It does not include gameplay automation, aim/trigger functionality, weapon manipulation, exploit loading, or executor-specific features.
+## Current implementation
 
-## Current status
+- `src/Bootstrap.lua` creates the base library object, fills verified service
+  captures, extends the library, creates its ScreenGui, and publishes the
+  shared Library/Options/Toggles tables.
+- `docs/capture-wiring.md` records verified capture mappings and unresolved
+  slots. Unknown captures are required inputs; they are not guessed.
 
-- [x] UI source inspected from the supplied `Rivals UE.txt` attachment.
-- [x] Initial source map and design contract documented in [docs/ui-source-map.md](docs/ui-source-map.md).
-- [ ] Clean library implementation.
-- [ ] Mobile interaction and layout verification.
-- [ ] Component and theme/configuration implementation.
+## Not finished yet
 
-## Design direction
+The bootstrap intentionally stops until the remaining VM capture values are
+provided. Window/tab glue, control factories, configuration/theme wiring, and
+the actual menu content still need to be implemented and verified in Delta.
 
-Classic dark interface, sharp corners, thin outlines, restrained blue accent, horizontal tabs, two content columns, draggable and resizable window, and complete hide/show behavior.
+## Source package
 
-See [docs/ui-source-map.md](docs/ui-source-map.md) for source locations, verified behavior, and unresolved design decisions.
+The extracted source package supplied for this rebuild contains:
+- `Rivals_UE_UI_Library.lua`
+- `Rivals_UE_UI_Library_inline.lua`
+- `Rivals_UE_themes.json`
+- `Rivals_UE_vm_strings.txt`
+- `assets/`
+
+Keep the clean and inline library variants synchronized when modifying the
+extracted library. Do not modify the original obfuscated source or re-encode
+readable strings.
+
+## Design constraints
+
+- Portrait phone usage, with the UI remaining a horizontal rectangle.
+- Compact default height; resizing remains available.
+- Toggle UI hides the entire interface and restores it when toggled again.
+- Preserve the supplied UE fonts, theme values, and component styling.
+- No invented capture mappings or unverified Delta compatibility claims.
