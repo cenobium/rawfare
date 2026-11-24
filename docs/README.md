@@ -147,3 +147,12 @@ The window can be toggled with RightControl or a two-finger touch gesture.
 ## Mobile layout and color picker
 
 The example sizes the window from the current viewport. The color picker popup stays inside the visible screen and can be moved by dragging its top strip.
+
+
+## Persistent mobile controls
+
+The showcase creates a separate `UIRebornControls` ScreenGui. Its Toggle UI button remains visible when the main window is hidden, so the interface can always be restored. Lock UI independently enables or disables window dragging. Both controls stay outside the main window.
+
+## Touch color picker
+
+The saturation/value area, hue strip, and transparency strip read touch positions rather than the mouse pointer. The popup opens centered on screen and has a visible **DRAG COLOR PICKER** header.
