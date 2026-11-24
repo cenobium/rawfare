@@ -248,6 +248,14 @@ local function makeGroupbox(tab, name, side)
             box.BackgroundColor3 = self.Value and library.AccentColor or library.MainColor
             box.BorderColor3 = self.Value and library.AccentColorDark or library.OutlineColor
         end
+        function option:SetValue(nextValue)
+            self.Value = nextValue == true
+            self:Display()
+            invoke(library, self.Callback, self.Value)
+            invoke(library, self.Changed, self.Value)
+            library:UpdateDependencyBoxes()
+            return self
+        end
         local click = create(library, "TextButton", {
             BackgroundTransparency = 1,
             Text = "",
