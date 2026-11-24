@@ -213,16 +213,18 @@ local function makeGroupbox(tab, name, side)
         return object
     end
     function groupbox:AddLabel(value)
-        local text = type(value) == "table" and value.Text or value
-        local row = addRow(19)
+        local config = type(value) == "table" and value or {Text = value}
+        local row = addRow(config.TextWrapped and 30 or 19)
         local label = library:CreateLabel({
             BackgroundTransparency = 1,
             Position = UDim2.fromOffset(2, 0),
             Size = UDim2.new(1, -4, 1, 0),
-            Text = tostring(text or ""),
+            Text = tostring(config.Text or ""),
             TextColor3 = library.FontColor,
             TextSize = 13,
+            TextWrapped = config.TextWrapped == true,
             TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = config.TextWrapped and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center,
             Parent = row,
         })
         local object = {Label = label, Outer = row}
