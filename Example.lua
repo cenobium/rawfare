@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=foundation-20261124-3"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=foundation-20261124-4"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
