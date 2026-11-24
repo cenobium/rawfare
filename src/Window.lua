@@ -635,7 +635,7 @@ local function makeGroupbox(tab, name, side)
     end
     function groupbox:AddTabbox(tabName)
         local frame = create(library, "Frame", {
-            Name = tostring(tab.Window.Library.ActiveTab or "Tab") .. "_" .. tostring(tabName or "Tabbox"),
+            Name = tostring(tab.Name or tab.Window.Library.ActiveTab or "Tab") .. "_" .. tostring(tabName or "Tabbox"),
             BackgroundColor3 = library.BackgroundColor,
             BorderColor3 = library.OutlineColor,
             BorderSizePixel = 1,
