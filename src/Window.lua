@@ -839,15 +839,6 @@ function Window.attach(library, settings)
             right.CanvasSize = UDim2.fromOffset(0, rightLayout.AbsoluteContentSize.Y + 8)
         end)
         local tabButton = button(library, tabBar, name, UDim2.new(0, 72, 1, 0))
-        local tab = {
-            Name = name,
-            Window = self,
-            Page = page,
-            Button = tabButton,
-            Left = left,
-            Right = right,
-            Groupboxes = {},
-        }
         local indicator = create(library, "Frame", {
             BackgroundColor3 = library.AccentColor,
             BorderSizePixel = 0,
