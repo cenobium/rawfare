@@ -386,6 +386,18 @@ local function makeGroupbox(tab, name, side)
             [14] = {},
         })
         initialize()
+        local nativeRemove = option.Remove
+        function option:Remove()
+            for index = #(self.Addons or {}), 1, -1 do
+                local addon = self.Addons[index]
+                if addon and addon.Remove then
+                    addon:Remove()
+                else
+                    table.remove(self.Addons, index)
+                end
+            end
+            nativeRemove(self)
+        end
         self:Resize()
         return option
     end
