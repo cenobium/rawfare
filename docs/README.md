@@ -1,0 +1,131 @@
+# UI Reborn API
+
+## Load
+
+```lua
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua"))()
+```
+
+## Create a window
+
+```lua
+local Window = Library:CreateWindow({
+    Title = "My interface",
+    Center = true,
+    AutoShow = true,
+    Size = UDim2.fromOffset(440, 340),
+    TabPadding = 5,
+    MenuFadeTime = 0.15
+})
+```
+
+## Tabs and layout
+
+```lua
+local Tabs = {
+    Main = Window:AddTab("Main"),
+    Settings = Window:AddTab("Settings")
+}
+
+local Left = Tabs.Main:AddLeftGroupbox("General")
+local Right = Tabs.Main:AddRightGroupbox("Extra")
+```
+
+Each tab can contain left and right groupboxes. Groupboxes and tabbox tabs share the same control methods. Content scrolls when it exceeds the available height.
+
+## Controls
+
+### Toggle
+
+```lua
+Left:AddToggle("Enabled", {
+    Text = "Enable feature",
+    Default = false,
+    Callback = function(value)
+        print(value)
+    end
+})
+```
+
+### Button
+
+```lua
+Left:AddButton({
+    Text = "Run",
+    Func = function()
+        print("Clicked")
+    end
+})
+```
+
+### Slider
+
+```lua
+Left:AddSlider("Power", {
+    Text = "Power",
+    Default = 50,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Suffix = "%"
+})
+```
+
+### Dropdown
+
+```lua
+Left:AddDropdown("Mode", {
+    Text = "Mode",
+    Values = {"One", "Two", "Three"},
+    Default = 1
+})
+```
+
+### Input
+
+```lua
+Left:AddInput("Name", {
+    Text = "Name",
+    Default = "",
+    Placeholder = "Enter a name",
+    Finished = false
+})
+```
+
+### Label with color picker or key picker
+
+```lua
+Left:AddLabel("Accent"):AddColorPicker("Accent", {
+    Default = Color3.fromRGB(145, 190, 255),
+    Title = "Accent"
+})
+
+Left:AddLabel("Bind"):AddKeyPicker("FeatureBind", {
+    Default = "F",
+    Mode = "Toggle",
+    Text = "Feature"
+})
+```
+
+## Reading and changing values
+
+Controls are registered in the global `Toggles` and `Options` tables.
+
+```lua
+Toggles.Enabled:SetValue(true)
+print(Toggles.Enabled.Value)
+
+Options.Power:SetValue(75)
+print(Options.Power.Value)
+
+Options.Mode:SetValue("Two")
+print(Options.Mode.Value)
+```
+
+## Unload
+
+```lua
+Library:Unload()
+```
+
+The window can be toggled with RightControl or a two-finger touch gesture.
