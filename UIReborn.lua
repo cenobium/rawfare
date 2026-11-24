@@ -178,12 +178,27 @@ function Library:CreateLabel(Properties, IsHud)
     return Library:Create(_Instance, Properties);
 end;
 
-function Library:MakeDraggable(Instance, Cutoff)
+function Library:MakeDraggable(Instance, Cutoff, Handle)
     Instance.Active = true
     local Dragging = false
-    local TouchActive
+    local TouchActive = false
     local StartPoint
     local StartPosition
+
+    local function GetPoint(Input)
+        local Point
+        if Input.UserInputType == Enum.UserInputType.Touch then
+            Point = Vector2.new(Input.Position.X, Input.Position.Y)
+        else
+            local MousePoint = InputService:GetMouseLocation()
+            Point = Vector2.new(MousePoint.X, MousePoint.Y)
+        end
+        if not ScreenGui.IgnoreGuiInset then
+            local Inset = GuiService:GetGuiInset()
+            Point = Point - Vector2.new(Inset.X, Inset.Y)
+        end
+        return Point
+    end
 
     local function Move(Point)
         Instance.Position = UDim2.new(
@@ -201,43 +216,35 @@ function Library:MakeDraggable(Instance, Cutoff)
             and Point.Y >= Position.Y and Point.Y <= Position.Y + (Cutoff or 40)
     end
 
-    Library:GiveSignal(InputService.InputBegan:Connect(function(Input)
+    local function BeginDrag(Input)
         local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
         local IsMouse = Input.UserInputType == Enum.UserInputType.MouseButton1
         if not IsTouch and not IsMouse or Library.Locked then return end
-        local Point
-        if IsTouch then
-            Point = Vector2.new(Input.Position.X, Input.Position.Y)
-        else
-            local MousePoint = InputService:GetMouseLocation()
-            Point = Vector2.new(MousePoint.X, MousePoint.Y)
-        end
-        if not ScreenGui.IgnoreGuiInset then
-            local Inset = GuiService:GetGuiInset()
-            Point = Point - Vector2.new(Inset.X, Inset.Y)
-        end
-        if not OnHandle(Point) then return end
+        local Point = GetPoint(Input)
+        if not Handle and not OnHandle(Point) then return end
         Dragging = true
         TouchActive = IsTouch
         StartPoint = Point
         StartPosition = Instance.AbsolutePosition
-    end))
+    end
 
-    Library:GiveSignal(InputService.InputChanged:Connect(function(Input)
-        if not Dragging then return end
-        if TouchActive then
-            if Input.UserInputType == Enum.UserInputType.Touch then
-                Move((function() local P = Vector2.new(Input.Position.X, Input.Position.Y); if not ScreenGui.IgnoreGuiInset then local I = GuiService:GetGuiInset(); P = P - Vector2.new(I.X, I.Y) end; return P end)())
-            end
-        elseif Input.UserInputType == Enum.UserInputType.MouseMovement and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-            local Point = InputService:GetMouseLocation()
-            Move((function() local P = Vector2.new(Point.X, Point.Y); if not ScreenGui.IgnoreGuiInset then local I = GuiService:GetGuiInset(); P = P - Vector2.new(I.X, I.Y) end; return P end)())
-        end
-    end))
+    if Handle then
+        Handle.Active = true
+        Library:GiveSignal(Handle.InputBegan:Connect(BeginDrag))
+    else
+        Library:GiveSignal(InputService.InputBegan:Connect(BeginDrag))
+    end
 
     Library:GiveSignal(InputService.TouchMoved:Connect(function(Input)
         if Dragging and TouchActive then
-            Move((function() local P = Vector2.new(Input.Position.X, Input.Position.Y); if not ScreenGui.IgnoreGuiInset then local I = GuiService:GetGuiInset(); P = P - Vector2.new(I.X, I.Y) end; return P end)())
+            Move(GetPoint(Input))
+        end
+    end))
+
+    Library:GiveSignal(InputService.InputChanged:Connect(function(Input)
+        if Dragging and not TouchActive and Input.UserInputType == Enum.UserInputType.MouseMovement
+            and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            Move(GetPoint(Input))
         end
     end))
 
@@ -1188,10 +1195,9 @@ do
         Library:GiveSignal(InputService.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                 local Pointer = GetColorInputPosition(Input)
-                local AbsPos, AbsSize = PickerFrameOuter.AbsolutePosition, PickerFrameOuter.AbsoluteSize
                 local OnColorSwatch = IsInside(DisplayFrame, Pointer)
-                if not OnColorSwatch and (Pointer.X < AbsPos.X or Pointer.X > AbsPos.X + AbsSize.X
-                    or Pointer.Y < (AbsPos.Y - 20 - 1) or Pointer.Y > AbsPos.Y + AbsSize.Y) then
+                local OnPicker = PickerFrameOuter.Visible and IsInside(PickerFrameOuter, Pointer)
+                if not OnColorSwatch and not OnPicker then
                     ColorPicker:Hide()
                 end
                 if not Library:IsMouseOverFrame(ContextMenu.Container) then
@@ -3266,8 +3272,6 @@ function Library:CreateWindow(...)
         Parent = ScreenGui;
     });
 
-    Library:MakeDraggable(Outer, 25);
-
     local Inner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.AccentColor;
@@ -3291,6 +3295,21 @@ function Library:CreateWindow(...)
         ZIndex = 1;
         Parent = Inner;
     });
+
+    local WindowDragHandle = Library:Create('TextButton', {
+        Name = 'WindowDragHandle';
+        BackgroundTransparency = 1;
+        BorderSizePixel = 0;
+        Text = '';
+        AutoButtonColor = false;
+        Active = true;
+        Position = UDim2.fromOffset(0, 0);
+        Size = UDim2.new(1, 0, 0, 25);
+        ZIndex = 5;
+        Parent = Inner;
+    });
+
+    Library:MakeDraggable(Outer, 25, WindowDragHandle);
 
     local MainSectionOuter = Library:Create('Frame', {
         BackgroundColor3 = Library.BackgroundColor;
