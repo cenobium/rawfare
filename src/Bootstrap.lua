@@ -178,7 +178,6 @@ local function makeLibrary(Native)
     library.Captures = captures
     library.Native = Native
     library.CaptureState = state
-    library:CreateEvent("VisibilityChanged")
     function library:ApplyLayout()
         for index, tab in ipairs(self.TabOrder or {}) do
             if tab.Button then
@@ -227,12 +226,13 @@ local function makeLibrary(Native)
     })
     themeSetup()
     themeManager:SetLibrary(library)
-    if type(isfolder) == "function" and type(makefolder) == "function" then
-        pcall(themeManager.SetFolder, themeManager, "RivalsUE")
-    else
+    if type(isfile) ~= "function" or type(readfile) ~= "function" then
         themeManager.GetCustomTheme = function()
             return nil
         end
+    end
+    if type(isfolder) == "function" and type(makefolder) == "function" then
+        pcall(themeManager.SetFolder, themeManager, "RivalsUE")
     end
     pcall(themeManager.ApplyTheme, themeManager, "Default")
     library.ThemeManager = themeManager
