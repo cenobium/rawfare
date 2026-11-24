@@ -168,27 +168,28 @@ function Library:MakeDraggable(Instance, Cutoff)
     Instance.Active = true;
 
     Instance.InputBegan:Connect(function(Input)
-        if (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch) or Input.UserInputType == Enum.UserInputType.Touch then
-            local ObjPos = Vector2.new(
-                Mouse.X - Instance.AbsolutePosition.X,
-                Mouse.Y - Instance.AbsolutePosition.Y
-            );
+        local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
+        if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and not IsTouch then
+            return
+        end
 
-            if ObjPos.Y > (Cutoff or 40) then
-                return;
-            end;
+        local StartPoint = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
+        local ObjPos = StartPoint - Instance.AbsolutePosition
 
-            while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or (Input.UserInputType == Enum.UserInputType.Touch and Input.UserInputState == Enum.UserInputState.Change) do
-                Instance.Position = UDim2.new(
-                    0,
-                    Mouse.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
-                    0,
-                    Mouse.Y - ObjPos.Y + (Instance.Size.Y.Offset * Instance.AnchorPoint.Y)
-                );
+        if ObjPos.Y > (Cutoff or 40) then
+            return
+        end
 
-                RenderStepped:Wait();
-            end;
-        end;
+        while (IsTouch and Input.UserInputState ~= Enum.UserInputState.End) or (not IsTouch and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) do
+            local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
+            Instance.Position = UDim2.new(
+                0,
+                Point.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
+                0,
+                Point.Y - ObjPos.Y + (Instance.Size.Y.Offset * Instance.AnchorPoint.Y)
+            )
+            RenderStepped:Wait()
+        end
     end)
 end;
 
