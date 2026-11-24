@@ -1220,17 +1220,17 @@ function Native.library(captures)
             value265.BackgroundColor3 = value261
             value265.Name = charFn(256 - maxFn(1, #text5 % 256))
             value265.Size = newFn(0, 0, 0, textHeight3)
-            value265.Transparency = transparency
+            value265.BackgroundTransparency = transparency
 
             local value266 = value265.inner
 
             value266.BackgroundColor3 = value261
             value266.BorderColor3 = value263
-            value266.Transparency = transparency
+            value266.BackgroundTransparency = transparency
 
             local value267 = value266.inner
 
-            value267.Transparency = transparency
+            value267.BackgroundTransparency = transparency
 
             local uIGradient2 = value267.UIGradient
 
