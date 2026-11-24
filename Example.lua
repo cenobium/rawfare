@@ -13,6 +13,14 @@ local Viewport = Camera and Camera.ViewportSize or Vector2.new(900, 600)
 local WindowWidth = math.min(900, Viewport.X - 32)
 local WindowHeight = math.min(460, Viewport.Y - 48)
 
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua?v=20261124"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua?v=20261124"))()
+SaveManager:SetLibrary(Library)
+ThemeManager:SetLibrary(Library)
+SaveManager:SetFolder("UIReborn")
+ThemeManager:SetFolder("UIReborn")
+SaveManager:SetIgnoreIndexes({"MenuKey", "ThemeManager_ThemeList", "ThemeManager_CustomThemeName", "SaveManager_ConfigName", "SaveManager_ConfigList", "SaveManager_ImportConfig", "SaveManager_CommunityList"})
+
 local Window = Library:CreateWindow({
     Title = "UI Reborn",
     Center = true,
@@ -74,16 +82,244 @@ Right:AddInput("DemoInput", {
     Placeholder = "Type here",
     Finished = false
 })
-local Settings = Tabs.Settings:AddLeftGroupbox("Interface")
-Settings:AddLabel("Use the floating screen controls.")
-Settings:AddLabel("RightControl also toggles the window.")
-Settings:AddLabel("Use the floating HIDE / SHOW control on mobile.")
-Settings:AddButton({
+local Menu = Tabs.Settings:AddLeftGroupbox("Menu")
+Menu:AddLabel("Menu key"):AddKeyPicker("MenuKey", {
+    Default = "RightControl",
+    Mode = "Toggle",
+    Text = "Menu",
+    NoUI = true,
+    ChangedCallback = function(key)
+        Library.ToggleKeybind = Options.MenuKey
+    end
+})
+Library.ToggleKeybind = Options.MenuKey
+
+local MenuTransparency = Menu:AddSlider("MenuTransparency", {
+    Text = "Menu transparency",
+    Default = 0,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Callback = function(value)
+        local alpha = math.clamp(value, 0, 1)
+        for _, item in ipairs(Library.ScreenGui:GetDescendants()) do
+            if item:IsA("Frame") or item:IsA("ScrollingFrame") or item:IsA("TextButton") then
+                if item:GetAttribute("UIRebornBaseTransparency") == nil then
+                    item:SetAttribute("UIRebornBaseTransparency", item.BackgroundTransparency)
+                end
+                local base = item:GetAttribute("UIRebornBaseTransparency")
+                item.BackgroundTransparency = base + (1 - base) * alpha
+            end
+        end
+    end
+})
+Menu:AddDropdown("KeybindMenuMode", {
+    Text = "Keybind menu mode",
+    Values = {"Active", "Toggled", "All"},
+    Default = "All",
+    Callback = function(value)
+        Library.KeybindListMode = value
+        if Library.KeybindFrame then
+            Library.KeybindFrame.Visible = value ~= "Active" or true
+        end
+    end
+})
+Menu:AddButton({
     Text = "Unload library",
     Func = function()
         Library:Unload()
     end
 })
+
+local ThemeBox = Tabs.Settings:AddLeftTabbox("Theme / Background")
+local ThemeTab = ThemeBox:AddTab("Theme")
+local BackgroundTab = ThemeBox:AddTab("Background")
+local ThemeGroup = ThemeTab:AddLeftGroupbox("Theme colors")
+local function addThemeColor(id, title, field)
+    ThemeGroup:AddLabel(title):AddColorPicker(id, {
+        Default = Library[field],
+        Title = title,
+        Callback = function(color)
+            Library[field] = color
+            ThemeManager:ThemeUpdate()
+        end
+    })
+end
+addThemeColor("FontColor", "Font color", "FontColor")
+addThemeColor("MainColor", "Main color", "MainColor")
+addThemeColor("AccentColor", "Accent color", "AccentColor")
+addThemeColor("BackgroundColor", "Background color", "BackgroundColor")
+addThemeColor("OutlineColor", "Outline color", "OutlineColor")
+
+local builtInThemes = {}
+for name in pairs(ThemeManager.BuiltInThemes) do table.insert(builtInThemes, name) end
+table.sort(builtInThemes)
+local customThemes = ThemeManager:RefreshCustomThemes()
+for _, name in ipairs(customThemes) do table.insert(builtInThemes, name) end
+ThemeGroup:AddDropdown("ThemeManager_ThemeList", {
+    Text = "Theme list",
+    Values = builtInThemes,
+    Default = ThemeManager:GetDefault(),
+    Callback = function(name)
+        if name then
+            local ok, err = ThemeManager:ApplyTheme(name)
+            if not ok then Library:Notify(err, 3) end
+        end
+    end
+})
+ThemeGroup:AddInput("ThemeManager_CustomThemeName", {
+    Text = "Custom theme name",
+    Default = "",
+    Placeholder = "Theme name"
+})
+ThemeGroup:AddButton({Text = "Save theme", Func = function()
+    local ok, err = ThemeManager:SaveCustomTheme(Options.ThemeManager_CustomThemeName.Value)
+    Library:Notify(ok and "Theme saved" or tostring(err), 3)
+    local values = {}
+    for name in pairs(ThemeManager.BuiltInThemes) do table.insert(values, name) end
+    for _, name in ipairs(ThemeManager:RefreshCustomThemes()) do table.insert(values, name) end
+    table.sort(values)
+    Options.ThemeManager_ThemeList:SetValues(values)
+end}):AddButton({Text = "Set default", Func = function()
+    local name = Options.ThemeManager_ThemeList.Value
+    if not name then return Library:Notify("Select a theme", 2) end
+    local ok, err = ThemeManager:SaveDefault(name)
+    Library:Notify(ok and ("Default theme: " .. name) or tostring(err), 3)
+end})
+
+local Lighting = game:GetService("Lighting")
+local Blur = Lighting:FindFirstChild("UIRebornBlur") or Instance.new("BlurEffect")
+Blur.Name = "UIRebornBlur"
+Blur.Parent = Lighting
+local ColorEffect = Lighting:FindFirstChild("UIRebornColor") or Instance.new("ColorCorrectionEffect")
+ColorEffect.Name = "UIRebornColor"
+ColorEffect.Parent = Lighting
+local BackgroundGroup = BackgroundTab:AddLeftGroupbox("Background effects")
+BackgroundGroup:AddSlider("BackgroundBlur", {
+    Text = "Blur",
+    Default = 0,
+    Min = 0,
+    Max = 50,
+    Rounding = 0,
+    Callback = function(value) Blur.Size = value end
+})
+BackgroundGroup:AddSlider("BackgroundContrast", {
+    Text = "Contrast",
+    Default = 5,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+    Callback = function(value) ColorEffect.Contrast = (value - 5) / 5 end
+})
+BackgroundGroup:AddSlider("BackgroundSaturation", {
+    Text = "Saturation",
+    Default = 5,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+    Callback = function(value) ColorEffect.Saturation = (value - 5) / 5 end
+})
+BackgroundGroup:AddSlider("BackgroundBrightness", {
+    Text = "Brightness",
+    Default = 0.5,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Callback = function(value) ColorEffect.Brightness = (value - 0.5) * 2 end
+})
+
+local Configuration = Tabs.Settings:AddRightGroupbox("Configuration")
+Configuration:AddInput("SaveManager_ConfigName", {
+    Text = "Config name",
+    Default = "",
+    Placeholder = "Enter config name"
+})
+Configuration:AddDropdown("SaveManager_ConfigList", {
+    Text = "Config list",
+    Values = SaveManager:RefreshConfigList(),
+    AllowNull = true
+})
+local function refreshConfigs()
+    Options.SaveManager_ConfigList:SetValues(SaveManager:RefreshConfigList())
+    Options.SaveManager_ConfigList:SetValue(nil)
+end
+local function notifyResult(ok, err, successText)
+    Library:Notify(ok and successText or tostring(err), 3)
+end
+Configuration:AddButton({Text = "Create config", Func = function()
+    local name = Options.SaveManager_ConfigName.Value
+    local ok, err = SaveManager:Save(name)
+    notifyResult(ok, err, "Config created")
+    if ok then refreshConfigs() end
+end}):AddButton({Text = "Load config", Func = function()
+    local ok, err = SaveManager:Load(Options.SaveManager_ConfigList.Value)
+    notifyResult(ok, err, "Config loaded")
+end})
+Configuration:AddButton({Text = "Overwrite config", Func = function()
+    local ok, err = SaveManager:Save(Options.SaveManager_ConfigList.Value)
+    notifyResult(ok, err, "Config overwritten")
+end}):AddButton({Text = "Delete config", Func = function()
+    local ok, err = SaveManager:Delete(Options.SaveManager_ConfigList.Value)
+    notifyResult(ok, err, "Config deleted")
+    if ok then refreshConfigs() end
+end})
+Configuration:AddButton({Text = "Refresh list", Func = refreshConfigs})
+local autoloadName = SaveManager:GetAutoload() or "none"
+local autoloadLabel = Configuration:AddLabel("Current autoload config: " .. autoloadName, true)
+Configuration:AddButton({Text = "Set autoload", Func = function()
+    local name = Options.SaveManager_ConfigList.Value
+    if not name then return Library:Notify("Select a config", 2) end
+    local ok, err = SaveManager:SetAutoload(name)
+    if ok then autoloadLabel:SetText("Current autoload config: " .. name) end
+    notifyResult(ok, err, "Autoload config set")
+end}):AddButton({Text = "Remove autoload", Func = function()
+    local ok, err = SaveManager:RemoveAutoload()
+    if ok then autoloadLabel:SetText("Current autoload config: none") end
+    notifyResult(ok, err, "Autoload config removed")
+end})
+Configuration:AddDivider()
+Configuration:AddInput("SaveManager_ImportConfig", {
+    Text = "Paste config here",
+    Default = "",
+    Placeholder = "Paste JSON configuration"
+})
+Configuration:AddButton({Text = "Import pasted config", Func = function()
+    local ok, err = SaveManager:Import(Options.SaveManager_ImportConfig.Value)
+    notifyResult(ok, err, "Config imported")
+end}):AddButton({Text = "Copy config", Func = function()
+    local ok, err = SaveManager:CopyToClipboard()
+    notifyResult(ok, err, "Config copied to clipboard")
+end})
+Configuration:AddButton({Text = "Paste clipboard config", Func = function()
+    local getclipboard = (type(getgenv) == "function" and getgenv().getclipboard) or getclipboard
+    if not getclipboard then return Library:Notify("Clipboard read is unavailable", 3) end
+    local ok, value = pcall(getclipboard)
+    if not ok or type(value) ~= "string" then return Library:Notify("Clipboard read failed", 3) end
+    Options.SaveManager_ImportConfig:SetValue(value)
+end})
+Configuration:AddDivider()
+Configuration:AddDropdown("SaveManager_CommunityList", {
+    Text = "Community configs",
+    Values = SaveManager:RefreshCommunityList(),
+    AllowNull = true
+})
+Configuration:AddButton({Text = "Refresh community list", Func = function()
+    Options.SaveManager_CommunityList:SetValues(SaveManager:RefreshCommunityList())
+    Options.SaveManager_CommunityList:SetValue(nil)
+end}):AddButton({Text = "Load community config", Func = function()
+    local ok, err = SaveManager:LoadCommunity(Options.SaveManager_CommunityList.Value)
+    notifyResult(ok, err, "Community config loaded")
+end})
+
+local defaultTheme = ThemeManager:GetDefault()
+if defaultTheme then ThemeManager:ApplyTheme(defaultTheme) end
+local loadedAuto = SaveManager:LoadAutoloadConfig()
+if loadedAuto then Library:Notify("Autoload config loaded", 3) end
+
+Library:OnUnload(function()
+    if Blur and Blur.Parent then Blur:Destroy() end
+    if ColorEffect and ColorEffect.Parent then ColorEffect:Destroy() end
+end)
 local Parent = Library.ScreenGui.Parent
 local PreviousDock = Parent:FindFirstChild("UIRebornControls")
 if PreviousDock then
