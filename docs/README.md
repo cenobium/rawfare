@@ -229,7 +229,7 @@ Aimbot:AddLabel("Aim key"):AddKeyPicker("AimKey", {
 })
 ```
 
-Info fields: `Default` (required), `Mode`, `Modes`, `Text`, `Callback`, `ChangedCallback`, `SyncToggleState`.
+Info fields: `Default` (required), `Mode`, `Modes`, `Text`, `Callback`, `ChangedCallback`, `SyncToggleState`, `KeyboardOnly`.
 
 Modes are `Always`, `Toggle`, and `Hold`. Key picker methods: `GetState()`, `SetValue(data)`, `OnClick(callback)`, `OnChanged(callback)`, `DoClick()`, `Update()`.
 
@@ -324,6 +324,7 @@ Available library methods:
 - `Notify(text, seconds)`
 - `SetWatermark(text)`, `SetWatermarkVisibility(boolean)`
 - `Toggle()` toggles the main window.
+- `SetToggleKeybind(keyPickerOrKeyName)` sets the menu key source. Pass the menu `KeyPicker` option or a keyboard key name.
 - `SetLocked(boolean)`, `ToggleLock()` control window dragging.
 - `Unload()` disconnects library signals and destroys the UI.
 - `OnUnload(callback)` registers an unload callback.
@@ -340,7 +341,7 @@ The library also exposes registry helpers `AddToRegistry` and `RemoveFromRegistr
 - The floating dock can be dragged by its title strip.
 - The floating dock and main window share the library lock state.
 - The two-finger restore gesture is disabled because ordinary multi-touch gameplay input could accidentally reopen the window.
-- The color picker popup opens centered, has a drag handle, and supports touch input.
+- The color picker popup opens centered, has a drag handle, and tracks touch movement by touch ID. Saturation/value, hue, and transparency controls support touch and mouse dragging.
 
 ## What is not bundled
 
@@ -353,65 +354,69 @@ The public function inventory in this repository's core `UIReborn.lua` was compa
 Upstream reference: https://github.com/violin-suzutsuki/LinoriaLib
 
 
-## Settings, ThemeManager and SaveManager
+## Reusable Settings API
 
-`SaveManager` and `ThemeManager` are bundled directly inside `UIReborn.lua` and exposed as `Library.SaveManager` and `Library.ThemeManager`. They share the library's `Toggles` and `Options` registries. The default storage folder is `UIReborn`.
-
-### Settings tab
-
-The Settings tab is organized into two columns.
-
-**Left column - Menu**
-- Menu key picker (defaults to RightControl).
-- Menu transparency slider from 0.0 to 1.0 in 0.1 increments.
-- Keybind menu mode: Active, Toggled, or All.
-
-**Left column - Theme**
-- Theme colors: font, main, accent, background, outline.
-- Built-in and locally saved custom theme list.
-- Save custom theme and set default theme.
-- Blur: 0-50.
-- Contrast and saturation: 0-10, mapped to Roblox ColorCorrectionEffect's -1 to 1 range.
-- Brightness: 0.0-1.0, mapped to Roblox ColorCorrectionEffect's -1 to 1 range.
-
-**Right column - Background and Configuration**
-- Config name and local config list.
-- Create, load, overwrite, delete, and refresh.
-- Set and remove autoload, with the active name displayed.
-- Paste JSON into the import field and import it.
-- Copy current config to clipboard and paste clipboard content into the import field.
-- Community config list and load action.
-
-### Config file format and executor requirements
-
-Local config files are JSON under `UIReborn/settings/`; themes are stored under `UIReborn/themes/`. Local persistence requires executor functions such as `makefolder`, `isfolder`, `writefile`, `readfile`, `isfile`, `listfiles`, and `delfile`. Clipboard actions require `setclipboard` / `toclipboard` and optionally `getclipboard` / `readclipboard`. Unsupported functions are reported instead of silently claiming success.
-
-### Community configs
-
-The community dropdown reads `community-configs/index.json` from this repository. The registry is intentionally empty until community submissions are reviewed. Add entries in this format:
-
-```json
-[
-  {
-    "name": "Example config",
-    "url": "https://raw.githubusercontent.com/OWNER/REPO/BRANCH/config.json"
-  }
-]
-```
-
-Each remote file must use the same JSON structure produced by SaveManager's `Export()` method. Only add configs that are safe to load and have been reviewed. A community config can change any matching registered toggle or option in the current script.
-
-### Manager API
+Every script can create the same complete Settings tab with one library call. Do not rebuild Menu, Theme, Background, or Configuration groupboxes in each game script.
 
 ```lua
+local Settings = Library:CreateSettingsTab(Window, {
+    Folder = "MyScript",
+    Name = "Settings",
+    MenuKey = "RightControl"
+})
+```
+
+The call initializes the bundled managers and creates four standard groups:
+
+**Menu**
+- Keyboard-only menu key picker, synchronized with `Library:SetToggleKeybind`.
+- Menu transparency slider.
+- Keybind list mode: Active, Toggled, or All.
+
+**Theme**
+- Font, main, accent, background, and outline color pickers.
+- Built-in and custom theme list.
+- Save custom theme, set default, and refresh themes.
+
+**Background**
+- Background transparency.
+- Blur, contrast, saturation, and brightness effects.
+
+**Configuration**
+- Create, load, overwrite, delete, and refresh local configs.
+- Set/remove autoload and display the current autoload name.
+- Import pasted JSON, copy config, and import from clipboard.
+- Refresh and load reviewed community configs.
+
+The API uses IDs prefixed with `UIReborn_` to avoid collisions with game controls. Local persistence requires executor file APIs. Clipboard actions require clipboard APIs. Community configs require HTTP access.
+
+## Floating controls
+
+`Library:CreateWindow()` automatically creates a separate floating control dock. Every showcase and script using the library gets:
+
+- **HIDE / SHOW** to hide or restore the entire main interface.
+- **LOCK** to toggle window and dock dragging.
+- A draggable title strip.
+- A separate ScreenGui, so the controls remain visible while the main library window is hidden.
+
+Do not create a second dock in the showcase. The controls are removed by `Library:Unload()`.
+
+## Manager API
+
+The managers are bundled in `UIReborn.lua` and initialized by `CreateSettingsTab`. They can also be configured manually:
+
+```lua
+local SaveManager = Library.SaveManager
+local ThemeManager = Library.ThemeManager
+
 SaveManager:SetLibrary(Library)
-SaveManager:SetFolder("UIReborn")
+SaveManager:SetFolder("MyScript")
 SaveManager:SetIgnoreIndexes({"OptionId"})
-SaveManager:Save("config-name")
-SaveManager:Load("config-name")
-SaveManager:Delete("config-name")
+SaveManager:Save("default")
+SaveManager:Load("default")
+SaveManager:Delete("default")
 SaveManager:RefreshConfigList()
-SaveManager:SetAutoload("config-name")
+SaveManager:SetAutoload("default")
 SaveManager:RemoveAutoload()
 SaveManager:LoadAutoloadConfig()
 SaveManager:Export()
@@ -422,7 +427,7 @@ SaveManager:RefreshCommunityList()
 SaveManager:LoadCommunity("Community config")
 
 ThemeManager:SetLibrary(Library)
-ThemeManager:SetFolder("UIReborn")
+ThemeManager:SetFolder("MyScript")
 ThemeManager:ApplyTheme("Midnight")
 ThemeManager:SaveCustomTheme("My theme")
 ThemeManager:RefreshCustomThemes()
@@ -430,4 +435,5 @@ ThemeManager:SaveDefault("My theme")
 ThemeManager:GetDefault()
 ```
 
-Both managers are part of the single-file `UIReborn.lua` library. The showcase loads only the core library before building Settings.
+Theme colors are synchronized with the reusable Settings color pickers when a theme is applied. The default theme and autoload config are applied when the Settings API is created.
+
