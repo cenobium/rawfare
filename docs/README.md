@@ -380,7 +380,7 @@ The call initializes the bundled managers and creates four standard groups:
 
 **Background**
 - Background transparency.
-- Blur, contrast, saturation, and brightness effects.
+- Contrast, saturation, and brightness color-correction effects. Blur is not part of the library.
 
 **Configuration**
 - Create, load, overwrite, delete, and refresh local configs.
@@ -456,4 +456,4 @@ Run these in the Roblox client with the target executor. Static source checks do
 Do not mark these runtime checks complete until they have been exercised in the target Roblox client and executor.
 
 
-Mobile input uses dedicated touch-move tracking for the color picker, picker drag handle, and floating controls. Background effects initialize to neutral values, including blur size zero.
+The color picker, picker drag handle, main window, and floating dock use global input events with screen-coordinate hit-testing. Touch movement is tracked by touch ID, with mouse support retained. Blur creation and its Settings control have been removed; startup also destroys a leftover `UIRebornBlur` from older versions.
