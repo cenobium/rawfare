@@ -376,53 +376,74 @@ local function makeGroupbox(tab, name, side)
             Parent = track,
         })
         register(library, fill, {BackgroundColor3 = "AccentColor"})
+        local thumb = create(library, "Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = library.AccentColor,
+            BorderColor3 = library.AccentColorDark,
+            BorderSizePixel = 1,
+            Position = UDim2.new(0, 0, 0.5, 0),
+            Size = UDim2.fromOffset(7, 7),
+            Visible = false,
+            ZIndex = 3,
+            Parent = track,
+        })
+        register(library, thumb, {BackgroundColor3 = "AccentColor", BorderColor3 = "AccentColorDark"})
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Slider", "Slider", tonumber(config.Default) or min, config.Callback or callback)
-        local function display()
-            local ratio = max == min and 0 or math.clamp((option.Value - min) / (max - min), 0, 1)
-            fill.Size = UDim2.new(ratio, 0, 1, 0)
-            local digits = tonumber(config.Decimals) or 0
-            valueLabel.Text = string.format("%." .. digits .. "f", option.Value) .. (config.Suffix or "")
-        end
-        function option:SetValue(nextValue)
-            local number = math.clamp(tonumber(nextValue) or min, min, max)
-            local step = tonumber(config.Step)
-            if step and step > 0 then
-                number = min + math.floor((number - min) / step + 0.5) * step
-            end
-            self.Value = number
-            display()
-            invoke(library, self.Callback, number)
-            invoke(library, self.Changed, number)
+        option.Min = min
+        option.Max = max
+        option.MaxSize = math.max(track.AbsoluteSize.X, 1)
+        option.Increment = tonumber(config.Step or config.Increment)
+        option.Rounding = tonumber(config.Decimals) or 0
+        option.Idx = option.Flag
+        option.ChangedFuncs = {}
+        option.HolderFrame = row
+        option.SettingValue = false
+        option.Visible = true
+        local tweenSlot = captureSlot("Tween", nil)
+        local sliderFactory = library.Native and library.Native.slider
+        assert(type(sliderFactory) == "function", "Native.slider factory missing")
+        local initialize = sliderFactory({
+            [0] = groupbox,
+            [1] = option,
+            [2] = true,
+            [3] = fill,
+            [4] = {
+                Min = min,
+                Max = max,
+                Suffix = config.Suffix or "",
+                Compact = config.Compact == true,
+                HideMax = config.HideMax == true,
+                BlankSize = 0,
+            },
+            [5] = tweenSlot,
+            [6] = library.Mouse,
+            [7] = library,
+            [8] = thumb,
+            [9] = library.TweenService,
+            [10] = valueLabel,
+            [11] = groupbox,
+            [12] = track,
+            [13] = option.Flag,
+            [14] = library.Options,
+            [15] = {title, valueLabel, track, fill, thumb},
+            [16] = library.UserInputService,
+            [17] = library.RunService.RenderStepped,
+        })
+        initialize()
+        local originalDisplay = option.Display
+        function option:Display()
+            originalDisplay(self)
+            local ratio = library:MapValue(self.Value, self.Min, self.Max, 0, 1)
+            thumb.Position = UDim2.new(ratio, 0, 0.5, 0)
             library:UpdateDependencyBoxes()
-            return self
         end
-        local dragging = false
-        local function update(input)
-            local ratio = math.clamp((input.Position.X - track.AbsolutePosition.X) / math.max(track.AbsoluteSize.X, 1), 0, 1)
-            option:SetValue(min + (max - min) * ratio)
+        local function updateMaxSize()
+            option.MaxSize = math.max(track.AbsoluteSize.X, 1)
+            option:Display()
         end
-        track.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                update(input)
-            end
-        end)
-        library.UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                update(input)
-            end
-        end)
-        library.UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end)
+        track:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateMaxSize)
+        updateMaxSize()
         option:SetValue(option.Value)
-        function option:Remove()
-            row:Destroy()
-            library.Options[self.Flag] = nil
-            groupbox:Resize()
-        end
         self:Resize()
         return option
     end
