@@ -891,9 +891,14 @@ do
 
         local PickerDrag = Library:Create('TextButton', {
             Name = 'ColorPickerDrag',
-            BackgroundTransparency = 1,
+            BackgroundColor3 = Library.MainColor,
+            BackgroundTransparency = 0.08,
             BorderSizePixel = 0,
-            Text = '',
+            Text = 'DRAG COLOR PICKER',
+            TextColor3 = Library.FontColor,
+            TextSize = 11,
+            Font = Enum.Font.GothamBold,
+            Active = true,
             AutoButtonColor = false,
             Position = UDim2.fromOffset(0, 0),
             Size = UDim2.new(1, 0, 0, 22),
@@ -995,7 +1000,7 @@ do
                 while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or (Input.UserInputType == Enum.UserInputType.Touch and Input.UserInputState ~= Enum.UserInputState.End) do
                     local MinY = HueSelectorInner.AbsolutePosition.Y;
                     local MaxY = MinY + HueSelectorInner.AbsoluteSize.Y;
-                    local MouseY = math.clamp(Mouse.Y, MinY, MaxY);
+                    local MouseY = math.clamp(GetColorInputPosition(Input).Y, MinY, MaxY);
 
                     ColorPicker.Hue = ((MouseY - MinY) / (MaxY - MinY));
                     ColorPicker:Display();
@@ -1027,7 +1032,7 @@ do
                     while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or (Input.UserInputType == Enum.UserInputType.Touch and Input.UserInputState ~= Enum.UserInputState.End) do
                         local MinX = TransparencyBoxInner.AbsolutePosition.X;
                         local MaxX = MinX + TransparencyBoxInner.AbsoluteSize.X;
-                        local MouseX = math.clamp(Mouse.X, MinX, MaxX);
+                        local MouseX = math.clamp(GetColorInputPosition(Input).X, MinX, MaxX);
 
                         ColorPicker.Transparency = 1 - ((MouseX - MinX) / (MaxX - MinX));
 
