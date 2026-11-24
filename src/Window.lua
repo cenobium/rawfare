@@ -715,6 +715,7 @@ function Window.attach(library, settings)
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = topbar,
     })
+    local window
     local close = create(library, "TextButton", {
         AutoButtonColor = false,
         BackgroundColor3 = library.MainColor,
@@ -729,7 +730,11 @@ function Window.attach(library, settings)
     })
     register(library, close, {BackgroundColor3 = "MainColor", TextColor3 = "FontColor"})
     close.MouseButton1Click:Connect(function()
-        library.ScreenGui.Enabled = false
+        if window then
+            window:SetVisible(false)
+        else
+            library.ScreenGui.Enabled = false
+        end
     end)
     local tabBar = create(library, "Frame", {
         BackgroundColor3 = library.BackgroundColor,
@@ -755,7 +760,7 @@ function Window.attach(library, settings)
         Parent = root,
     })
     register(library, content, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor"})
-    local window = {
+    window = {
         Library = library,
         Root = root,
         Topbar = topbar,
@@ -771,7 +776,16 @@ function Window.attach(library, settings)
         return count == 1 and key or key .. "_" .. tostring(count)
     end
     function window:SetVisible(visible)
-        library.ScreenGui.Enabled = visible == true
+        visible = visible == true
+        library.ScreenGui.Enabled = visible
+        if library.Captures and library.Captures[7] then
+            local slot = library.Captures[7]
+            slot[3][slot[2]] = visible
+        end
+        if library.CaptureState then
+            library.CaptureState.Visible = visible
+        end
+        pcall(library.FireEvent, library, "VisibilityChanged", visible)
         return self
     end
     function window:Toggle()
