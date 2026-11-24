@@ -9,7 +9,9 @@ Rebuild a standalone, reusable Roblox Luau interface library with the visual beh
 ## Reference design contract
 
 - Classic, dark, sharp-cornered executor-style interface.
-- Wide, shallow rectangular composition; do not default to a tall Linoria-style window.
+- Designed for use on a portrait phone, but the interface itself must always remain a wide horizontal rectangle.
+- Never turn the window into a tall or vertically stacked layout when the device is in portrait orientation.
+- Scale the wide window to fit the available screen width while preserving its horizontal composition and readable touch targets.
 - Horizontal top-level tabs.
 - Two content columns.
 - Thin outlines and restrained blue accent.
@@ -21,7 +23,7 @@ Rebuild a standalone, reusable Roblox Luau interface library with the visual beh
 - `Toggle UI` hides the complete interface and restores it when toggled again.
 - Preserve position, size, and selected tab across hide/show.
 
-The screenshot's dimensions are not yet a final implementation size. Earlier supplied dimensions (1032 × 275) and the later screenshot's apparent dimensions are different references; choose a final mobile target only after comparing against the actual on-device screenshot.
+The screenshot's dimensions are not yet a final implementation size. Earlier supplied dimensions (1032 × 275) and the later screenshot's apparent dimensions are different references; keep the initial window wide and rectangular, then tune its exact size against the actual on-device result.
 
 ## Source map
 
@@ -73,8 +75,7 @@ The source has separate modules for toggles, sliders, dropdowns, color pickers, 
 
 ## Open questions
 
-- Final mobile portrait and landscape dimensions.
-- Whether portrait mode should preserve the wide ratio or switch to a stacked content arrangement.
+- Exact initial width and height, then final dimensions after on-device testing.
 - Whether the top navigation scrolls horizontally when all tabs do not fit.
 - Exact title-bar height and exact outer-frame offset.
 - Whether the blue outline is shown only during interaction or remains visible in a resting state (the source drag helper creates it during interaction).
