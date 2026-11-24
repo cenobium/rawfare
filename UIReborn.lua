@@ -1,4 +1,5 @@
 local InputService = game:GetService('UserInputService');
+local GuiService = game:GetService('GuiService');
 local TextService = game:GetService('TextService');
 local CoreGui = game:GetService('CoreGui');
 local Environment = (type(getgenv) == 'function' and getgenv()) or _G;
@@ -211,6 +212,10 @@ function Library:MakeDraggable(Instance, Cutoff)
             local MousePoint = InputService:GetMouseLocation()
             Point = Vector2.new(MousePoint.X, MousePoint.Y)
         end
+        if not ScreenGui.IgnoreGuiInset then
+            local Inset = GuiService:GetGuiInset()
+            Point = Point - Vector2.new(Inset.X, Inset.Y)
+        end
         if not OnHandle(Point) then return end
         Dragging = true
         TouchId = IsTouch and Input.TouchId or nil
@@ -222,11 +227,11 @@ function Library:MakeDraggable(Instance, Cutoff)
         if not Dragging then return end
         if TouchId then
             if Input.UserInputType == Enum.UserInputType.Touch and Input.TouchId == TouchId then
-                Move(Vector2.new(Input.Position.X, Input.Position.Y))
+                Move((function() local P = Vector2.new(Input.Position.X, Input.Position.Y); if not ScreenGui.IgnoreGuiInset then local I = GuiService:GetGuiInset(); P = P - Vector2.new(I.X, I.Y) end; return P end)())
             end
         elseif Input.UserInputType == Enum.UserInputType.MouseMovement and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
             local Point = InputService:GetMouseLocation()
-            Move(Vector2.new(Point.X, Point.Y))
+            Move((function() local P = Vector2.new(Point.X, Point.Y); if not ScreenGui.IgnoreGuiInset then local I = GuiService:GetGuiInset(); P = P - Vector2.new(I.X, I.Y) end; return P end)())
         end
     end))
 
@@ -1017,11 +1022,27 @@ do
         end;
 
         local function GetColorInputPosition(Input)
+            local Point
             if Input.UserInputType == Enum.UserInputType.Touch then
-                return Vector2.new(Input.Position.X, Input.Position.Y)
+                Point = Vector2.new(Input.Position.X, Input.Position.Y)
+            else
+                local Position = InputService:GetMouseLocation()
+                Point = Vector2.new(Position.X, Position.Y)
             end
-            local Position = InputService:GetMouseLocation()
-            return Vector2.new(Position.X, Position.Y)
+            if not ScreenGui.IgnoreGuiInset then
+                local Inset = GuiService:GetGuiInset()
+                Point = Point - Vector2.new(Inset.X, Inset.Y)
+            end
+            return Point
+        end
+
+        local function GetColorMovementPosition(Input)
+            local Point = Vector2.new(Input.Position.X, Input.Position.Y)
+            if not ScreenGui.IgnoreGuiInset then
+                local Inset = GuiService:GetGuiInset()
+                Point = Point - Vector2.new(Inset.X, Inset.Y)
+            end
+            return Point
         end
 
         local function IsInside(Instance, Point)
@@ -1050,11 +1071,11 @@ do
             local function OnMove(Movement)
                 if IsTouch then
                     if Movement.UserInputType == Enum.UserInputType.Touch and Movement.TouchId == TouchId then
-                        Update(Vector2.new(Movement.Position.X, Movement.Position.Y))
+                        Update(GetColorMovementPosition(Movement))
                     end
                 elseif Movement.UserInputType == Enum.UserInputType.MouseMovement then
                     local Position = InputService:GetMouseLocation()
-                    Update(Vector2.new(Position.X, Position.Y))
+                    Update(GetColorInputPosition({UserInputType = Enum.UserInputType.MouseButton1}))
                 end
             end
 
@@ -1181,17 +1202,17 @@ do
             if not PickerDragging then return end
             if PickerTouchId then
                 if Movement.UserInputType == Enum.UserInputType.Touch and Movement.TouchId == PickerTouchId then
-                    MovePicker(Vector2.new(Movement.Position.X, Movement.Position.Y))
+                    MovePicker(GetColorMovementPosition(Movement))
                 end
             elseif Movement.UserInputType == Enum.UserInputType.MouseMovement and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
                 local Position = InputService:GetMouseLocation()
-                MovePicker(Vector2.new(Position.X, Position.Y))
+                MovePicker(GetColorInputPosition({UserInputType = Enum.UserInputType.MouseButton1}))
             end
         end))
 
         Library:GiveSignal(InputService.TouchMoved:Connect(function(Movement)
             if PickerDragging and PickerTouchId and Movement.TouchId == PickerTouchId then
-                MovePicker(Vector2.new(Movement.Position.X, Movement.Position.Y))
+                MovePicker(GetColorMovementPosition(Movement))
             end
         end))
 
@@ -3794,15 +3815,6 @@ function Library:CreateWindow(...)
         return Tab;
     end;
 
-    local ModalElement = Library:Create('TextButton', {
-        BackgroundTransparency = 1;
-        Size = UDim2.new(0, 0, 0, 0);
-        Visible = true;
-        Text = '';
-        Modal = false;
-        Parent = ScreenGui;
-    });
-
     local TransparencyCache = {};
     local Toggled = false;
     local Fading = false;
@@ -3815,7 +3827,7 @@ function Library:CreateWindow(...)
         local FadeTime = Config.MenuFadeTime;
         Fading = true;
         Toggled = (not Toggled);
-        ModalElement.Modal = Toggled;
+        -- no modal input capture; floating controls remain interactive
 
         if Toggled then
             -- A bit scuffed, but if we're going from not toggled -> toggled we want to show the frame immediately so that the fade is visible.
