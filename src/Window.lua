@@ -646,6 +646,9 @@ local function makeGroupbox(tab, name, side)
         end
         local nativeRemove = option.Remove
         function option:Remove()
+            if self.CloseDropdown then
+                self:CloseDropdown()
+            end
             nativeRemove(self)
             outsideConnection:Disconnect()
             outsideEvent:Destroy()
@@ -888,6 +891,9 @@ local function makeGroupbox(tab, name, side)
         end
         local nativeRemove = option.Remove
         function option:Remove()
+            if self.Hide then
+                self:Hide()
+            end
             nativeRemove(self)
             for index = #groupbox.Addons, 1, -1 do
                 if groupbox.Addons[index] == self then
