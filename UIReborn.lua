@@ -31,6 +31,8 @@ local Options = {};
 Environment.Toggles = Toggles;
 Environment.Options = Options;
 
+Library_PLACEHOLDER = nil
+
 local Library = {
     Registry = {};
     RegistryMap = {};
@@ -54,6 +56,9 @@ local Library = {
     Signals = {};
     ScreenGui = ScreenGui;
 };
+
+Library.Toggles = Toggles
+Library.Options = Options
 
 local RainbowStep = 0
 local Hue = 0
