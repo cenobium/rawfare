@@ -1108,6 +1108,7 @@ local function makeGroupbox(tab, name, side)
             [6] = dependencyLayout,
         })
         initialize()
+        dependency.ParentGroupbox = groupbox
         local adapter = {
             Window = window,
             Left = container,
@@ -1195,6 +1196,12 @@ local function makeGroupbox(tab, name, side)
         initialize()
         local originalRemoveTabbox = tabContainer.Remove
         function tabContainer:Remove()
+            for _, panel in pairs(self.Tabs) do
+                if panel.Groupbox and panel.Groupbox.Remove then
+                    panel.Groupbox:Remove()
+                end
+            end
+            table.clear(groupbox.NestedGroupboxes)
             originalRemoveTabbox(self)
             groupbox.Tabbox = nil
             groupbox:Resize()
@@ -1212,6 +1219,7 @@ local function makeGroupbox(tab, name, side)
                 end,
             }
             panel.Groupbox = makeGroupbox(adapter, label, 1)
+            table.insert(groupbox.NestedGroupboxes, panel.Groupbox)
             panel.Groupbox.Outer.Parent = panel.Container
             panel:Resize()
             for _, method in ipairs({
@@ -1239,6 +1247,44 @@ local function makeGroupbox(tab, name, side)
     function groupbox:Remove()
         if self.Tabbox and self.Tabbox.Remove then
             self.Tabbox:Remove()
+        end
+        for _, nested in ipairs(self.NestedGroupboxes or {}) do
+            if nested and nested.Remove then
+                nested:Remove()
+            end
+        end
+        local ownedDependencies = {}
+        for _, dependency in ipairs(library.DependencyBoxes) do
+            if dependency.ParentGroupbox == self then
+                table.insert(ownedDependencies, dependency)
+            end
+        end
+        for _, dependency in ipairs(ownedDependencies) do
+            if dependency.Remove then
+                dependency:Remove()
+            end
+        end
+        local ownedOptions = {}
+        for _, option in pairs(library.Options) do
+            if option.Groupbox == self then
+                table.insert(ownedOptions, option)
+            end
+        end
+        for _, option in ipairs(ownedOptions) do
+            if option.Remove then
+                option:Remove()
+            end
+        end
+        local ownedToggles = {}
+        for _, option in pairs(library.Toggles) do
+            if option.Groupbox == self then
+                table.insert(ownedToggles, option)
+            end
+        end
+        for _, option in ipairs(ownedToggles) do
+            if option.Remove then
+                option:Remove()
+            end
         end
         outer:Destroy()
         self:Resize()
