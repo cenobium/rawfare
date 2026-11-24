@@ -914,7 +914,7 @@ do
             local Start = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
             local Origin = PickerFrameOuter.Position
             while (IsTouch and Input.UserInputState ~= Enum.UserInputState.End) or (not IsTouch and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) do
-                local Point = GetColorInputPosition(Input)
+                local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
                 local Viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
                 local Size = PickerFrameOuter.AbsoluteSize
                 local X = math.clamp(Origin.X.Offset + Point.X - Start.X, 4, math.max(4, Viewport.X - Size.X - 4))
@@ -1013,14 +1013,14 @@ do
         end);
 
         DisplayFrame.InputBegan:Connect(function(Input)
-            if (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch) and not Library:MouseIsOverOpenedFrame() then
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                 if PickerFrameOuter.Visible then
                     ColorPicker:Hide()
                 else
                     ContextMenu:Hide()
                     ColorPicker:Show()
-                end;
-            elseif Input.UserInputType == Enum.UserInputType.MouseButton2 and not Library:MouseIsOverOpenedFrame() then
+                end
+            elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
                 ContextMenu:Show()
                 ColorPicker:Hide()
             end
