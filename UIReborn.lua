@@ -909,7 +909,7 @@ do
             local Start = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
             local Origin = PickerFrameOuter.Position
             while (IsTouch and Input.UserInputState ~= Enum.UserInputState.End) or (not IsTouch and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) do
-                local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
+                local Point = GetColorInputPosition(Input)
                 local Viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
                 local Size = PickerFrameOuter.AbsoluteSize
                 local X = math.clamp(Origin.X.Offset + Point.X - Start.X, 4, math.max(4, Viewport.X - Size.X - 4))
@@ -922,10 +922,10 @@ do
         local function PositionColorPicker()
             local Viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
             local Size = PickerFrameOuter.AbsoluteSize
-            local Anchor = DisplayFrame.AbsolutePosition
-            local X = math.clamp(Anchor.X, 4, math.max(4, Viewport.X - Size.X - 4))
-            local Y = Anchor.Y + Size.Y + 18 <= Viewport.Y and Anchor.Y + 18 or Anchor.Y - Size.Y - 4
-            Y = math.clamp(Y, 4, math.max(4, Viewport.Y - Size.Y - 4))
+            local X = math.max(4, (Viewport.X - Size.X) / 2)
+            local Y = math.max(4, (Viewport.Y - Size.Y) / 2)
+            X = math.min(X, math.max(4, Viewport.X - Size.X - 4))
+            Y = math.min(Y, math.max(4, Viewport.Y - Size.Y - 4))
             PickerFrameOuter.Position = UDim2.fromOffset(X, Y)
         end
 
@@ -961,16 +961,23 @@ do
             ColorPicker:Display();
         end;
 
+        local function GetColorInputPosition(Input)
+            if Input.UserInputType == Enum.UserInputType.Touch then
+                return Vector2.new(Input.Position.X, Input.Position.Y)
+            end
+            return Vector2.new(Mouse.X, Mouse.Y)
+        end
+
         SatVibMap.InputBegan:Connect(function(Input)
             if (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch) then
                 while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or (Input.UserInputType == Enum.UserInputType.Touch and Input.UserInputState ~= Enum.UserInputState.End) do
                     local MinX = SatVibMap.AbsolutePosition.X;
                     local MaxX = MinX + SatVibMap.AbsoluteSize.X;
-                    local MouseX = math.clamp(Mouse.X, MinX, MaxX);
+                    local MouseX = math.clamp(GetColorInputPosition(Input).X, MinX, MaxX);
 
                     local MinY = SatVibMap.AbsolutePosition.Y;
                     local MaxY = MinY + SatVibMap.AbsoluteSize.Y;
-                    local MouseY = math.clamp(Mouse.Y, MinY, MaxY);
+                    local MouseY = math.clamp(GetColorInputPosition(Input).Y, MinY, MaxY);
 
                     ColorPicker.Sat = (MouseX - MinX) / (MaxX - MinX);
                     ColorPicker.Vib = 1 - ((MouseY - MinY) / (MaxY - MinY));
@@ -1038,8 +1045,9 @@ do
             if (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch) then
                 local AbsPos, AbsSize = PickerFrameOuter.AbsolutePosition, PickerFrameOuter.AbsoluteSize;
 
-                if Mouse.X < AbsPos.X or Mouse.X > AbsPos.X + AbsSize.X
-                    or Mouse.Y < (AbsPos.Y - 20 - 1) or Mouse.Y > AbsPos.Y + AbsSize.Y then
+                local Pointer = GetColorInputPosition(Input)
+                if Pointer.X < AbsPos.X or Pointer.X > AbsPos.X + AbsSize.X
+                    or Pointer.Y < (AbsPos.Y - 20 - 1) or Pointer.Y > AbsPos.Y + AbsSize.Y then
 
                     ColorPicker:Hide();
                 end;
