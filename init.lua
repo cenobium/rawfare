@@ -21,7 +21,7 @@ local main = UI:CreateTab("Main")
 local interface = main:AddLeftGroupbox("Interface")
 local appearance = main:AddRightGroupbox("Appearance")
 
-interface:AddLabel("RightControl toggles the full interface")
+interface:AddLabel("RightControl or two-finger touch toggles the full interface")
 interface:AddButton({
     Text = "Test notification",
     Func = function()
@@ -157,7 +157,7 @@ local settings = UI:CreateTab("Settings")
 local help = settings:AddLeftGroupbox("Controls")
 help:AddLabel("Drag the title area to move the window")
 help:AddLabel("Use the bottom-right corner to resize")
-help:AddLabel("Press RightControl to hide or restore it")
+help:AddLabel("RightControl or two-finger touch restores it")
 help:AddToggle({
     Text = "Show keybind list",
     Flag = "UI_Keybind_List",
