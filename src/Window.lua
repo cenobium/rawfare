@@ -640,7 +640,7 @@ local function makeGroupbox(tab, name, side)
     function groupbox:AddKeyPicker(value, callback)
         local config = type(value) == "table" and value or {Text = value, Default = Enum.KeyCode.Unknown, Callback = callback}
         local row = addRow(22)
-        local title = library:CreateLabel({
+        library:CreateLabel({
             BackgroundTransparency = 1,
             Position = UDim2.fromOffset(2, 0),
             Size = UDim2.new(1, -82, 1, 0),
@@ -650,66 +650,83 @@ local function makeGroupbox(tab, name, side)
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = row,
         })
-        local keyButton = button(library, row, tostring(config.Default and config.Default.Name or "None"), UDim2.fromOffset(76, 20), UDim2.new(1, -76, 0, 1))
-        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "KeyPicker", "KeyPicker", config.Default or Enum.KeyCode.Unknown, config.Callback or callback)
+        local keyButton = button(library, row, "", UDim2.fromOffset(76, 20), UDim2.new(1, -76, 0, 1))
+        keyButton.Text = ""
+        local keyText = library:CreateLabel({
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
+            Text = "",
+            TextColor3 = library.FontColor,
+            TextSize = 12,
+            TextXAlignment = Enum.TextXAlignment.Center,
+            Parent = keyButton,
+        })
+        local modePicker = create(library, "Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromOffset(1, 1),
+            Visible = false,
+            Parent = row,
+        })
+        local keybindLabel = library:CreateLabel({
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 18),
+            Text = "",
+            TextColor3 = library.FontColor,
+            TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Visible = false,
+            Parent = library.KeybindContainer,
+        })
+        local default = config.Default or Enum.KeyCode.Unknown
+        local defaultValue = tostring(default)
+        if typeof(default) == "EnumItem" then
+            if default == Enum.UserInputType.MouseButton1 then
+                defaultValue = "MB1"
+            elseif default == Enum.UserInputType.MouseButton2 then
+                defaultValue = "MB2"
+            else
+                defaultValue = default.Name
+            end
+        end
+        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "KeyPicker", "KeyPicker", defaultValue, config.Callback or callback)
+        option.Value = defaultValue
         option.Mode = config.Mode or "Toggle"
-        local active = false
-        local function matches(input)
-            return input.KeyCode == option.Value or input.UserInputType == option.Value
-        end
-        function option:SetValue(nextValue)
-            if type(nextValue) == "table" then
-                self.Value = nextValue[1] or Enum.KeyCode.Unknown
-                self.Mode = nextValue[2] or self.Mode
-            else
-                self.Value = nextValue or Enum.KeyCode.Unknown
-            end
-            keyButton.Text = tostring(self.Value.Name or self.Value)
-            invoke(library, self.Changed, self.Value, self.Mode)
-            library:UpdateDependencyBoxes()
-            return self
-        end
-        local listening = false
-        keyButton.MouseButton1Click:Connect(function()
-            listening = true
-            keyButton.Text = "Press key"
-        end)
-        local beganConnection = library.UserInputService.InputBegan:Connect(function(input, processed)
-            if listening and not processed then
-                if input.UserInputType == Enum.UserInputType.Keyboard then
-                    option:SetValue(input.KeyCode)
-                    listening = false
-                elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
-                    option:SetValue(input.UserInputType)
-                    listening = false
-                end
-                return
-            end
-            if processed or not matches(input) then
-                return
-            end
-            if option.Mode == "Toggle" then
-                active = not active
-            else
-                active = true
-            end
-            invoke(library, option.Callback, active, option.Mode)
-        end)
-        local endedConnection = library.UserInputService.InputEnded:Connect(function(input)
-            if option.Mode == "Hold" and active and matches(input) then
-                active = false
-                invoke(library, option.Callback, false, option.Mode)
-            end
-        end)
-        function option:SetMode(mode)
-            self.Mode = mode
-            return self
-        end
+        option.Toggled = false
+        option.Override = false
+        option.NoUI = config.NoUI == true
+        option.SyncToggleState = config.SyncToggleState == true
+        option.ChangedCallback = config.ChangedCallback
+        option.Connections = {}
+        option.Idx = option.Flag
+        option.Parent = {Addons = {}, Type = "KeyPicker"}
+        local keypickerFactory = library.Native and library.Native.keyPicker
+        assert(type(keypickerFactory) == "function", "Native.keyPicker factory missing")
+        local initialize = keypickerFactory({
+            [0] = option,
+            [1] = library.UserInputService,
+            [2] = keyButton,
+            [3] = {
+                Text = config.Text or config.Name or "Keybind",
+                Modes = config.Modes or {"Always", "Toggle", "Hold"},
+            },
+            [4] = library,
+            [5] = keybindLabel,
+            [6] = option.Flag,
+            [7] = keyText,
+            [8] = option.Parent,
+            [9] = modePicker,
+            [10] = library.Options,
+        })
+        initialize()
+        local nativeRemove = option.Remove
         function option:Remove()
-            beganConnection:Disconnect()
-            endedConnection:Disconnect()
-            row:Destroy()
-            library.Options[self.Flag] = nil
+            nativeRemove(self)
+            if row.Parent then
+                row:Destroy()
+            end
+            if modePicker.Parent then
+                modePicker:Destroy()
+            end
             groupbox:Resize()
         end
         self:Resize()
