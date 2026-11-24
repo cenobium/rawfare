@@ -567,6 +567,17 @@ local function makeGroupbox(tab, name, side)
                 outsideEvent:Fire(input)
             end
         end)
+        local outsideDestroyed = false
+        local function cleanupOutside()
+            if outsideDestroyed then
+                return
+            end
+            outsideDestroyed = true
+            outsideConnection:Disconnect()
+            outsideEvent:Destroy()
+        end
+        library:GiveSignal(outsideConnection)
+        library:OnUnload(cleanupOutside)
         local values = config.Values or {}
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Dropdown", "Dropdown", config.Multi and {} or config.Default or values[1], config.Callback or callback)
         option.Values = values
@@ -619,8 +630,7 @@ local function makeGroupbox(tab, name, side)
                 self:CloseDropdown()
             end
             nativeRemove(self)
-            outsideConnection:Disconnect()
-            outsideEvent:Destroy()
+            cleanupOutside()
             if row.Parent then
                 row:Destroy()
             end
