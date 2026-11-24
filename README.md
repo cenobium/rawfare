@@ -12,7 +12,7 @@ A compact Roblox Luau UI library based on the LinoriaLib architecture.
 ## Run the showcase
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/Example.lua?update=foundation-20261124-4"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/Example.lua?update=foundation-touchfix-20261124"))()
 ```
 
 ## Load the library in your own script
@@ -32,4 +32,4 @@ Group:AddButton({Text = "Click me", Func = function() Library:Notify("Hello", 2)
 
 See [the documentation](docs/README.md) for controls and layout examples.
 
-The core library bundles `Library.SaveManager` and `Library.ThemeManager`. Use `Library:CreateSettingsTab(Window, {Folder = "MyScript"})` to add the complete reusable Settings tab with menu key synchronization, theme colors and presets, background effects, config management, clipboard import/export, autoload, and community config loading. `Library:CreateWindow()` automatically adds the floating HIDE / SHOW and LOCK controls outside the main window. The color picker supports mouse and touch dragging. Local config persistence requires executor file APIs; clipboard actions require clipboard APIs. The community config registry starts empty until reviewed entries are added.
+The core library bundles `Library.SaveManager` and `Library.ThemeManager`. Use `Library:CreateSettingsTab(Window, {Folder = "MyScript"})` to add the complete reusable Settings tab with menu key synchronization, theme colors and presets, background effects, config management, clipboard import/export, autoload, and community config loading. `Library:CreateWindow()` automatically adds the floating HIDE / SHOW and LOCK controls outside the main window. The color picker supports mouse and touch dragging using dedicated touch-move tracking. Background blur and color correction start neutral at execution. Local config persistence requires executor file APIs; clipboard actions require clipboard APIs. The community config registry starts empty until reviewed entries are added.
