@@ -437,3 +437,20 @@ ThemeManager:GetDefault()
 
 Theme colors are synchronized with the reusable Settings color pickers when a theme is applied. The default theme and autoload config are applied when the Settings API is created.
 
+
+## Foundation verification checklist
+
+Run these in the Roblox client with the target executor. Static source checks do not replace runtime testing.
+
+1. Load `Example.lua`. Confirm the floating HIDE / SHOW and LOCK dock appears outside the window.
+2. Press HIDE. Confirm the complete main interface disappears while the dock stays visible. Press SHOW and confirm the full window returns.
+3. Drag the dock title strip with touch. Confirm it follows the active finger and stays inside the viewport.
+4. Open the accent color picker. Tap a new point in the saturation/value square, drag continuously, change hue, and test transparency. Confirm the swatch and callback update on every movement.
+5. Repeat color picker tests with a mouse. Confirm touch and mouse input do not leave a stuck drag state.
+6. Open Settings, change the menu key with a physical keyboard, and confirm the selected key hides and restores the menu. Confirm the old key no longer toggles it.
+7. Save a named config, change controls, load it, and confirm toggles, sliders, dropdowns, colors, and keybinds restore. Confirm later changes autosave to the active config.
+8. Save a custom theme, apply another theme, reapply the custom theme, and confirm all five theme color pickers and the UI colors synchronize.
+9. Set an autoload config, unload and reload the showcase, and confirm it loads. Remove autoload and confirm it no longer loads.
+10. Unload the library. Confirm the floating dock, main ScreenGui, and Settings lighting effects are removed.
+
+Do not mark these runtime checks complete until they have been exercised in the target Roblox client and executor.
