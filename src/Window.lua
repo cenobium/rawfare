@@ -454,6 +454,7 @@ local function makeGroupbox(tab, name, side)
         })
         register(library, valueLabel, {TextColor3 = "AccentColor"})
         local track = create(library, "Frame", {
+            Active = true,
             BackgroundColor3 = library.OutlineColor,
             BorderSizePixel = 0,
             Position = UDim2.fromOffset(2, 21),
