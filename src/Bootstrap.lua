@@ -187,8 +187,25 @@ local function makeLibrary(Native)
             break
         end
     end
+    library.PopoutGuis = {}
+    local originalCreatePopout = library.CreatePopout
+    if type(originalCreatePopout) == "function" then
+        library.CreatePopout = function(self, settings)
+            local popout = originalCreatePopout(self, settings)
+            local popoutGui = popout and popout.Holder and popout.Holder.Parent
+            if popoutGui and popoutGui:IsA("ScreenGui") then
+                table.insert(library.PopoutGuis, popoutGui)
+            end
+            return popout
+        end
+    end
     library:OnUnload(function()
-        if library.OverlayGui then
+        for _, gui in ipairs(library.PopoutGuis) do
+            if gui and gui.Parent then
+                gui:Destroy()
+            end
+        end
+        if library.OverlayGui and library.OverlayGui.Parent then
             library.OverlayGui:Destroy()
         end
     end)
