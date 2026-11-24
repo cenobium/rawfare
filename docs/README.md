@@ -1,10 +1,16 @@
-# UI Reborn API
+# UI Reborn API Reference
+
+UI Reborn is a Luau UI library based on LinoriaLib. This guide documents the APIs actually present in `UIReborn.lua`. It is intended as the reference for scripts and code-generating assistants.
 
 ## Load
 
 ```lua
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua"))()
+local Library = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua"
+))()
 ```
+
+The library creates its ScreenGui when loaded. Load it once per script session.
 
 ## Create a window
 
@@ -13,146 +19,300 @@ local Window = Library:CreateWindow({
     Title = "My interface",
     Center = true,
     AutoShow = true,
-    Size = UDim2.fromOffset(560, 300),
+    Size = UDim2.fromOffset(700, 450),
+    Position = UDim2.fromOffset(100, 80),
     TabPadding = 5,
     MenuFadeTime = 0.15
 })
 ```
 
-## Tabs and layout
+Window configuration:
+- `Title`: title text.
+- `Center`: center the window.
+- `AutoShow`: show the window after creation.
+- `Size`: UDim2 window size. Default is 560x300.
+- `Position`: UDim2 position when not centered.
+- `TabPadding`: spacing between tabs.
+- `MenuFadeTime`: toggle animation duration.
+
+Also supported: legacy call `Library:CreateWindow("Title", true)`.
+
+## Tabs and two-column layout
 
 ```lua
-local Tabs = {
-    Main = Window:AddTab("Main"),
-    Settings = Window:AddTab("Settings")
-}
+local Main = Window:AddTab("Main")
+local Settings = Window:AddTab("Settings")
 
-local Left = Tabs.Main:AddLeftGroupbox("General")
-local Right = Tabs.Main:AddRightGroupbox("Extra")
+local Aimbot = Main:AddLeftGroupbox("Aimbot")
+local Checks = Main:AddRightGroupbox("Checks")
+local Extra = Main:AddGroupbox({ Name = "Extra", Side = 1 })
 ```
 
-Each tab can contain left and right groupboxes. Groupboxes and tabbox tabs share the same control methods. Content scrolls when it exceeds the available height.
+Each tab has left and right columns. Groupboxes stack vertically in their column. Controls are added to groupboxes in order.
+
+Tab methods:
+- `Window:AddTab(name)`
+- `Tab:AddGroupbox({ Name = name, Side = 1 or 2 })`
+- `Tab:AddLeftGroupbox(name)`
+- `Tab:AddRightGroupbox(name)`
+- `Tab:AddLeftTabbox(name)`
+- `Tab:AddRightTabbox(name)`
+- `Tab:AddTabbox({ Name = name, Side = 1 or 2 })`
+- `Tab:ShowTab()`, `Tab:HideTab()`, `Tab:SetLayoutOrder(number)`
+- `Tab:Show()`, `Tab:Hide()`, `Tab:Resize()`
+- `Groupbox:Resize()`
+- `Window:SetWindowTitle(text)`
 
 ## Controls
+
+Every control is created from a groupbox. Most controls take a unique string ID and an info table. IDs are used in `Options` or `Toggles`.
 
 ### Toggle
 
 ```lua
-Left:AddToggle("Enabled", {
-    Text = "Enable feature",
+Aimbot:AddToggle("Enabled", {
+    Text = "Enable aimbot",
     Default = false,
+    Callback = function(value)
+        print(value)
+    end,
+    Risky = false,
+    Tooltip = "Enable or disable this feature"
+})
+```
+
+Info fields: `Text` (required), `Default`, `Callback`, `Risky`, `Tooltip`, `BlankSize`.
+
+### Slider
+
+```lua
+Aimbot:AddSlider("Smoothness", {
+    Text = "Smoothness",
+    Default = 35,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Suffix = "%",
+    Callback = function(value) end
+})
+```
+
+Info fields: `Text`, `Default`, `Min`, `Max`, `Rounding` (required), `Callback`, `Compact`, `Tooltip`, `Suffix`, `HideMax`, `BlankSize`.
+
+### Dropdown
+
+```lua
+Aimbot:AddDropdown("AimPart", {
+    Text = "Aim part",
+    Values = {
+        "HumanoidRootPart",
+        "LeftHand",
+        "RightHand",
+        "Head",
+        "Torso"
+    },
+    Default = "Head",
     Callback = function(value)
         print(value)
     end
 })
 ```
 
-### Button
+Info fields: `Values` (required), `Text`, `Default`, `AllowNull`, `Multi`, `Compact`, `Callback`, `Tooltip`, `SpecialType`.
 
-```lua
-Left:AddButton({
-    Text = "Run",
-    Func = function()
-        print("Clicked")
-    end
-})
-```
-
-### Slider
-
-```lua
-Left:AddSlider("Power", {
-    Text = "Power",
-    Default = 50,
-    Min = 0,
-    Max = 100,
-    Rounding = 0,
-    Suffix = "%"
-})
-```
-
-### Dropdown
-
-```lua
-Left:AddDropdown("Mode", {
-    Text = "Mode",
-    Values = {"One", "Two", "Three"},
-    Default = 1
-})
-```
+- `Default` may be a value, an index, or a table of values for a multi-select.
+- Set `Multi = true` for multiple selections. The value is a dictionary, e.g. `{ Head = true, Torso = true }`.
+- Set `AllowNull = true` to allow no selection.
+- `SpecialType = "Player"` or `"Team"` fills values from current players or teams and permits no selection.
+- Use `Options.AimPart:SetValues(newValues)` to replace the list.
 
 ### Input
 
 ```lua
-Left:AddInput("Name", {
-    Text = "Name",
+Aimbot:AddInput("TargetName", {
+    Text = "Target name",
     Default = "",
     Placeholder = "Enter a name",
-    Finished = false
+    Numeric = false,
+    Finished = false,
+    Callback = function(value) end
 })
 ```
 
-### Label with color picker or key picker
+Info fields: `Text` (required), `Default`, `Placeholder`, `Numeric`, `Finished`, `Callback`.
+
+### Button
 
 ```lua
-Left:AddLabel("Accent"):AddColorPicker("Accent", {
-    Default = Color3.fromRGB(145, 190, 255),
-    Title = "Accent"
-})
-
-Left:AddLabel("Bind"):AddKeyPicker("FeatureBind", {
-    Default = "F",
-    Mode = "Toggle",
-    Text = "Feature"
+Aimbot:AddButton({
+    Text = "Run",
+    Func = function() end,
+    Tooltip = "Run the action",
+    DoubleClick = false
 })
 ```
+
+Legacy form is also supported: `Aimbot:AddButton("Run", function() end)`. Buttons can be placed side by side by chaining: `Aimbot:AddButton({...}):AddButton({...})`.
+
+### Label, divider and spacing
+
+```lua
+local Label = Aimbot:AddLabel("Target settings")
+Label:SetText("Updated label")
+Aimbot:AddDivider()
+Aimbot:AddBlank(8)
+```
+
+Methods: `AddLabel(text, doesWrap)`, `Label:SetText(text)`, `AddDivider()`, `AddBlank(pixelHeight)`.
+
+### Color picker
+
+```lua
+Aimbot:AddLabel("Accent"):AddColorPicker("Accent", {
+    Default = Color3.fromRGB(145, 190, 255),
+    Title = "Accent",
+    Transparency = 0,
+    Callback = function(color) end
+})
+```
+
+Info fields: `Default` (Color3, required), `Title`, `Transparency`, `Callback`.
+
+Color picker option methods: `SetValue(hsv, transparency)`, `SetValueRGB(color3, transparency)`, `SetHSVFromRGB(color3)`, `OnChanged(callback)`.
+
+### Key picker
+
+```lua
+Aimbot:AddLabel("Aim key"):AddKeyPicker("AimKey", {
+    Default = "Q",
+    Mode = "Hold",
+    Modes = { "Always", "Toggle", "Hold" },
+    Text = "Aimbot",
+    Callback = function(value) end,
+    ChangedCallback = function(key) end
+})
+```
+
+Info fields: `Default` (required), `Mode`, `Modes`, `Text`, `Callback`, `ChangedCallback`, `SyncToggleState`.
+
+Modes are `Always`, `Toggle`, and `Hold`. Key picker methods: `GetState()`, `SetValue(data)`, `OnClick(callback)`, `OnChanged(callback)`, `DoClick()`, `Update()`.
+
+To attach a key picker to a toggle, call it on the toggle object: `Toggles.Enabled:AddKeyPicker("EnabledKey", { Default = "Q", Mode = "Toggle", SyncToggleState = true })` when using a toggle that exposes the addon method.
+
+### Dependency box
+
+```lua
+local Advanced = Aimbot:AddDependencyBox()
+Advanced:SetupDependencies({
+    { Toggles.Enabled, true }
+})
+Advanced:AddToggle("Prediction", {
+    Text = "Prediction",
+    Default = false
+})
+Advanced:AddSlider("PredictionAmount", {
+    Text = "Prediction amount",
+    Default = 50,
+    Min = 0,
+    Max = 100,
+    Rounding = 0
+})
+```
+
+A dependency box is another groupbox-like container. It becomes visible only when every listed toggle matches its required value. Methods: `SetupDependencies(dependencies)`, `Update()`, `Resize()`. Each dependency is a pair: `{ toggleObject, requiredBoolean }`.
+
+### Tabbox
+
+```lua
+local WeaponBox = Main:AddLeftTabbox("Weapon")
+local Rifle = WeaponBox:AddTab("Rifle")
+local Pistol = WeaponBox:AddTab("Pistol")
+
+Rifle:AddToggle("RifleEnabled", {
+    Text = "Enable rifle",
+    Default = true
+})
+Pistol:AddSlider("PistolDelay", {
+    Text = "Delay",
+    Default = 10,
+    Min = 0,
+    Max = 100,
+    Rounding = 0
+})
+```
+
+A tabbox is a nested tab strip inside a column. Its tabs support the same control methods as groupboxes.
 
 ## Reading and changing values
 
-Controls are registered in the global `Toggles` and `Options` tables.
+Controls are registered in global tables:
+- Toggles use `Toggles[id]`.
+- Sliders, dropdowns, inputs, color pickers and key pickers use `Options[id]`.
 
 ```lua
 Toggles.Enabled:SetValue(true)
 print(Toggles.Enabled.Value)
 
-Options.Power:SetValue(75)
-print(Options.Power.Value)
+Options.Smoothness:SetValue(75)
+print(Options.Smoothness.Value)
 
-Options.Mode:SetValue("Two")
-print(Options.Mode.Value)
+Options.AimPart:SetValue("Head")
+Options.AimPart:SetValues({ "Head", "Torso" })
+
+Options.TargetName:SetValue("Player")
+Options.Accent:SetValueRGB(Color3.fromRGB(255, 80, 80))
+Options.AimKey:SetValue({ "Q", "Hold" })
 ```
 
-## Window controls
+Common option methods:
+- `SetValue(value)`
+- `OnChanged(callback)`
+- Dropdown: `SetValues(values)`, `GetActiveValues()`, `OpenDropdown()`, `CloseDropdown()`
+- Color picker: `SetValueRGB(color, transparency)`
+- Key picker: `GetState()`, `OnClick(callback)`
 
-The example provides a **Toggle UI** button. It hides the complete window; restore it with RightControl or the two-finger touch gesture.
+`OnChanged(callback)` immediately calls the callback with the current value, then calls it when the value changes.
 
-Use the lock methods to prevent accidental movement:
+## Library utilities
 
 ```lua
+Library:Notify("Loaded", 3)
+Library:SetWatermark("My script | user")
+Library:SetWatermarkVisibility(true)
+Library:SetWindowTitle -- use Window:SetWindowTitle("New title")
+Library:Toggle()
 Library:SetLocked(true)
-Library:SetLocked(false)
 Library:ToggleLock()
 ```
 
-The Settings showcase includes a **Lock UI position** toggle wired to `SetLocked`.
+Available library methods:
+- `Notify(text, seconds)`
+- `SetWatermark(text)`, `SetWatermarkVisibility(boolean)`
+- `Toggle()` toggles the main window.
+- `SetLocked(boolean)`, `ToggleLock()` control window dragging.
+- `Unload()` disconnects library signals and destroys the UI.
+- `OnUnload(callback)` registers an unload callback.
+- `GiveSignal(connection)` registers a connection for cleanup.
+- `SafeCallback(callback, ...)` invokes a callback safely when error notifications are enabled.
+- `UpdateColorsUsingRegistry()` reapplies registered theme colors.
+- `Create(class, properties)`, `CreateLabel(properties)`, `GetTextBounds(text, font, size)`, `GetDarkerColor(color)`, `MapValue(...)` are low-level helpers.
 
-## Unload
+The library also exposes registry helpers `AddToRegistry` and `RemoveFromRegistry`, tooltip/highlight helpers, `MakeDraggable`, `MouseIsOverOpenedFrame`, `IsMouseOverFrame`, and `UpdateDependencyBoxes`. These are lower-level APIs; most scripts do not need them.
 
-```lua
-Library:Unload()
-```
+## Mobile and window behavior
 
-The window can be toggled with RightControl or a two-finger touch gesture.
+- The showcase adds a separate floating **HIDE / SHOW** control so the window can be restored after hiding.
+- The floating dock can be dragged by its title strip.
+- The floating dock and main window share the library lock state.
+- The two-finger restore gesture is disabled because ordinary multi-touch gameplay input could accidentally reopen the window.
+- The color picker popup opens centered, has a drag handle, and supports touch input.
 
-## Mobile layout and color picker
+## What is not bundled
 
-The example sizes the window from the current viewport. The color picker popup stays inside the visible screen and can be moved by dragging its top strip.
+The repository currently contains the core library, showcase, and this documentation. Linoria's separate `ThemeManager.lua` and `SaveManager.lua` addons are **not included**. Do not assume `Library.ThemeManager`, `Library.SaveManager`, config-file persistence, or the full ThemeManager/SaveManager API exists in this repo. Those addons can be integrated separately if wanted.
 
+## API parity audit
 
-## Persistent mobile controls
+The public function inventory in this repository's core `UIReborn.lua` was compared against LinoriaLib's upstream `Library.lua`. All upstream core function names were present in the local library at the time of this audit. UI Reborn additionally exposes `Library:SetLocked` and `Library:ToggleLock`, plus its mobile color-picker positioning/input helpers. This is a name-level parity check, not a claim that every internal behavior is identical.
 
-The showcase creates a separate `UIRebornControls` ScreenGui. Its Toggle UI button remains visible when the main window is hidden, so the interface can always be restored. Lock UI independently enables or disables window dragging. Both controls stay outside the main window.
-
-## Touch color picker
-
-The saturation/value area, hue strip, and transparency strip read touch positions rather than the mouse pointer. The popup opens centered on screen and has a visible **DRAG COLOR PICKER** header.
+Upstream reference: https://github.com/violin-suzutsuki/LinoriaLib
