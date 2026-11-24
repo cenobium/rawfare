@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124mobilefix"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124touchslider2"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
@@ -100,23 +100,35 @@ DockGui.Parent = Parent
 
 local Dock = Instance.new("Frame")
 Dock.Name = "Controls"
-Dock.AnchorPoint = Vector2.new(1, 0.5)
-Dock.Position = UDim2.new(1, -12, 0.46, 0)
-Dock.Size = UDim2.fromOffset(116, 78)
+Dock.AnchorPoint = Vector2.new(0.5, 1)
+Dock.Position = UDim2.new(0.5, 0, 1, -18)
+Dock.Size = UDim2.fromOffset(154, 64)
 Dock.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
 Dock.BorderColor3 = Color3.fromRGB(145, 190, 255)
 Dock.BorderSizePixel = 1
+Dock.Active = true
 Dock.Parent = DockGui
 
-local function MakeDockButton(name, text, y)
+local DockTitle = Instance.new("TextLabel")
+DockTitle.Name = "DragHandle"
+DockTitle.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+DockTitle.BorderSizePixel = 0
+DockTitle.Size = UDim2.new(1, 0, 0, 19)
+DockTitle.Font = Enum.Font.GothamBold
+DockTitle.TextSize = 10
+DockTitle.TextColor3 = Color3.fromRGB(225, 225, 225)
+DockTitle.Text = "UI REBORN CONTROLS"
+DockTitle.Parent = Dock
+
+local function MakeDockButton(name, text, x)
     local button = Instance.new("TextButton")
     button.Name = name
-    button.Position = UDim2.fromOffset(4, y)
-    button.Size = UDim2.new(1, -8, 0, 32)
+    button.Position = UDim2.fromOffset(x, 23)
+    button.Size = UDim2.fromOffset(72, 35)
     button.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     button.BorderColor3 = Color3.fromRGB(55, 55, 55)
     button.TextColor3 = Color3.fromRGB(245, 245, 245)
-    button.TextSize = 13
+    button.TextSize = 11
     button.Font = Enum.Font.Gotham
     button.Text = text
     button.AutoButtonColor = true
@@ -124,8 +136,10 @@ local function MakeDockButton(name, text, y)
     return button
 end
 
-local ToggleButton = MakeDockButton("ToggleUI", "HIDE / SHOW", 4)
-local LockButton = MakeDockButton("LockUI", "LOCK: OFF", 41)
+local ToggleButton = MakeDockButton("ToggleUI", "HIDE / SHOW", 3)
+local LockButton = MakeDockButton("LockUI", "LOCK: OFF", 79)
+
+Library:MakeDraggable(Dock, 22)
 
 ToggleButton.Activated:Connect(function()
     Library:Toggle()
@@ -134,6 +148,7 @@ end)
 LockButton.Activated:Connect(function()
     local locked = Library:ToggleLock()
     LockButton.Text = locked and "LOCK: ON" or "LOCK: OFF"
+    DockTitle.Text = locked and "UI REBORN CONTROLS | LOCKED" or "UI REBORN CONTROLS"
 end)
 
 Library:OnUnload(function()
