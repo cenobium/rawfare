@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=unlimited-multi-20261124"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=settings-api-touch-20261124"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
@@ -12,14 +12,6 @@ local Camera = workspace.CurrentCamera
 local Viewport = Camera and Camera.ViewportSize or Vector2.new(900, 600)
 local WindowWidth = math.min(900, Viewport.X - 32)
 local WindowHeight = math.min(460, Viewport.Y - 48)
-
-local SaveManager = Library.SaveManager
-local ThemeManager = Library.ThemeManager
-SaveManager:SetLibrary(Library)
-ThemeManager:SetLibrary(Library)
-SaveManager:SetFolder("UIReborn")
-ThemeManager:SetFolder("UIReborn")
-SaveManager:SetIgnoreIndexes({"ThemeManager_ThemeList", "ThemeManager_CustomThemeName", "SaveManager_ConfigName", "SaveManager_ConfigList", "SaveManager_ImportConfig", "SaveManager_CommunityList"})
 
 local Window = Library:CreateWindow({
     Title = "UI Reborn",
