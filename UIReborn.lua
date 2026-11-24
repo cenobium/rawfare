@@ -934,20 +934,45 @@ do
 
         PickerDrag.InputBegan:Connect(function(Input)
             local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
-            if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and not IsTouch then
-                return
-            end
+            local IsMouse = Input.UserInputType == Enum.UserInputType.MouseButton1
+            if not IsTouch and not IsMouse then return end
+
+            local TouchId = IsTouch and Input.TouchId or nil
             local Start = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
-            local Origin = PickerFrameOuter.Position
-            while (IsTouch and Input.UserInputState ~= Enum.UserInputState.End) or (not IsTouch and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) do
-                local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
+            local Origin = PickerFrameOuter.AbsolutePosition
+            local MoveConnection
+            local EndConnection
+
+            local function Finish()
+                if MoveConnection then MoveConnection:Disconnect() end
+                if EndConnection then EndConnection:Disconnect() end
+            end
+
+            MoveConnection = InputService.InputChanged:Connect(function(Moved)
+                local Point
+                if IsTouch and Moved.UserInputType == Enum.UserInputType.Touch and Moved.TouchId == TouchId then
+                    Point = Vector2.new(Moved.Position.X, Moved.Position.Y)
+                elseif IsMouse and Moved.UserInputType == Enum.UserInputType.MouseMovement then
+                    Point = Vector2.new(Mouse.X, Mouse.Y)
+                end
+                if not Point then return end
+
                 local Viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
                 local Size = PickerFrameOuter.AbsoluteSize
-                local X = math.clamp(Origin.X.Offset + Point.X - Start.X, 4, math.max(4, Viewport.X - Size.X - 4))
-                local Y = math.clamp(Origin.Y.Offset + Point.Y - Start.Y, 4, math.max(4, Viewport.Y - Size.Y - 4))
+                local X = math.clamp(Origin.X + Point.X - Start.X, 4, math.max(4, Viewport.X - Size.X - 4))
+                local Y = math.clamp(Origin.Y + Point.Y - Start.Y, 4, math.max(4, Viewport.Y - Size.Y - 4))
                 PickerFrameOuter.Position = UDim2.fromOffset(X, Y)
-                RenderStepped:Wait()
-            end
+            end)
+
+            EndConnection = InputService.InputEnded:Connect(function(Ended)
+                if IsTouch and Ended.UserInputType == Enum.UserInputType.Touch and Ended.TouchId == TouchId
+                    or IsMouse and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
+                    Finish()
+                end
+            end)
+
+            Library:GiveSignal(MoveConnection)
+            Library:GiveSignal(EndConnection)
         end)
 
         local function PositionColorPicker()
@@ -4148,7 +4173,9 @@ function ThemeManager:ApplyTheme(name)
     self:ThemeUpdate()
     local options = self.Library.Options or {}
     local themeOption = options.UIReborn_ThemeList or options.ThemeManager_ThemeList
-    if themeOption then themeOption.Value = name end
+    if themeOption then
+        if themeOption.SetValue then themeOption:SetValue(name) else themeOption.Value = name end
+    end
     self.Applying = false
     return true
 end
