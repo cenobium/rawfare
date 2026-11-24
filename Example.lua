@@ -80,7 +80,8 @@ Settings:AddToggle("LockUI", {
         Library:SetLocked(value)
     end
 })
-Settings:AddLabel("RightControl or two-finger touch restores hidden UI.")
+Settings:AddLabel("Restore: RightControl")
+Settings:AddLabel("Mobile: two-finger touch")
 Settings:AddButton({
     Text = "Unload library",
     Func = function()
