@@ -89,6 +89,11 @@ end
 function Assets.install()
     local getcustomassetfn = getcustomasset or getsynasset
     local urls = {}
+    if type(makefolder) == 'function' and type(isfolder) == 'function' then
+        if not isfolder(Assets.Folder) then
+            pcall(makefolder, Assets.Folder)
+        end
+    end
     if not getcustomassetfn then
         warn('[UE Assets] getcustomasset/getsynasset not available')
         return urls
