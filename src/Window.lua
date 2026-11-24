@@ -293,53 +293,45 @@ local function makeGroupbox(tab, name, side)
             Parent = row,
         })
         register(library, box, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
-        local mark = create(library, "Frame", {
-            BackgroundColor3 = library.AccentColor,
-            BorderSizePixel = 0,
-            Position = UDim2.fromOffset(3, 3),
-            Size = UDim2.fromOffset(8, 8),
-            Visible = config.Default == true,
-            Parent = box,
-        })
-        register(library, mark, {BackgroundColor3 = "AccentColor"})
-        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Toggle", "Toggle", config.Default == true, config.Callback or callback)
-        local boxEntry = library.RegistryMap[box]
-        boxEntry.Properties.BackgroundColor3 = function()
-            return option.Value and library.AccentColor or library.MainColor
-        end
-        boxEntry.Properties.BorderColor3 = function()
-            return option.Value and library.AccentColorDark or library.OutlineColor
-        end
-        function option:Display()
-            mark.Visible = self.Value
-            box.BackgroundColor3 = self.Value and library.AccentColor or library.MainColor
-            box.BorderColor3 = self.Value and library.AccentColorDark or library.OutlineColor
-        end
-        function option:SetValue(nextValue)
-            self.Value = nextValue == true
-            self:Display()
-            invoke(library, self.Callback, self.Value)
-            invoke(library, self.Changed, self.Value)
-            library:UpdateDependencyBoxes()
-            return self
-        end
         local click = create(library, "TextButton", {
             BackgroundTransparency = 1,
             Text = "",
             Size = UDim2.new(1, 0, 1, 0),
             Parent = row,
         })
-        click.MouseButton1Click:Connect(function()
-            option:SetValue(not option.Value)
-            option:Display()
-            library:UpdateDependencyBoxes()
-        end)
-        option:Display()
-        function option:Remove()
-            row:Destroy()
-            library.Toggles[self.Flag] = nil
-            groupbox:Resize()
-        end
+        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Toggle", "Toggle", config.Default == true, config.Callback or callback)
+        option.Idx = option.Flag
+        option.ChangedFuncs = {}
+        option.Addons = {}
+        option.SettingValue = false
+        option.Visible = true
+        option.Risky = config.Risky == true
+        local borderSlot = captureSlot("OutlineColor", library.OutlineColor)
+        borderSlot[3] = setmetatable({}, {
+            __index = function(_, key)
+                return library[key]
+            end,
+        })
+        local toggleFactory = library.Native and library.Native.toggle
+        assert(type(toggleFactory) == "function", "Native.toggle factory missing")
+        local initialize = toggleFactory({
+            [0] = option,
+            [1] = groupbox,
+            [2] = box,
+            [3] = library,
+            [4] = row,
+            [5] = option.Flag,
+            [6] = row,
+            [7] = {},
+            [8] = nameLabel,
+            [9] = library.Toggles,
+            [10] = click,
+            [11] = {BlankSize = 0},
+            [12] = content,
+            [13] = borderSlot,
+            [14] = {},
+        })
+        initialize()
         self:Resize()
         return option
     end
