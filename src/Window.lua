@@ -637,6 +637,12 @@ local function makeGroupbox(tab, name, side)
             [15] = captureSlot("Frame", "Frame"),
         })
         initialize()
+        local nativeSetValue = option.SetValue
+        function option:SetValue(nextValue)
+            nativeSetValue(self, nextValue)
+            library:UpdateDependencyBoxes()
+            return self
+        end
         local nativeRemove = option.Remove
         function option:Remove()
             nativeRemove(self)
@@ -975,6 +981,12 @@ local function makeGroupbox(tab, name, side)
             [10] = library.Options,
         })
         initialize()
+        local nativeSetValue = option.SetValue
+        function option:SetValue(nextValue)
+            nativeSetValue(self, nextValue)
+            library:UpdateDependencyBoxes()
+            return self
+        end
         local nativeRemove = option.Remove
         function option:Remove()
             nativeRemove(self)
