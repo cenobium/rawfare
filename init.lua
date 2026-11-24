@@ -151,6 +151,33 @@ local help = settings:AddLeftGroupbox("Controls")
 help:AddLabel("Drag the title area to move the window")
 help:AddLabel("Use the bottom-right corner to resize")
 help:AddLabel("Press RightControl to hide or restore it")
+help:AddToggle({
+    Text = "Show keybind list",
+    Flag = "UI_Keybind_List",
+    Default = false,
+    Callback = function(value)
+        Library.KeypickerListVisible = value
+        for _, option in pairs(Library.Options) do
+            if option.Type == "KeyPicker" and option.Update then
+                option:Update()
+            end
+        end
+    end,
+})
+help:AddDropdown({
+    Text = "Keybind list mode",
+    Flag = "UI_Keybind_Mode",
+    Values = {"Active", "Toggled"},
+    Default = "Active",
+    Callback = function(value)
+        Library.KeypickerListMode = value
+        for _, option in pairs(Library.Options) do
+            if option.Type == "KeyPicker" and option.Update then
+                option:Update()
+            end
+        end
+    end,
+})
 
 local configs = settings:AddRightGroupbox("Configuration")
 local configName = configs:AddInput({
