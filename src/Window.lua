@@ -820,6 +820,11 @@ function Window.attach(library, settings)
     function window:SetVisible(visible)
         visible = visible == true
         library.ScreenGui.Enabled = visible
+        for _, gui in ipairs(library.PopoutGuis or {}) do
+            if gui and gui.Parent then
+                gui.Enabled = visible
+            end
+        end
         if library.Captures and library.Captures[7] then
             local slot = library.Captures[7]
             slot[3][slot[2]] = visible
