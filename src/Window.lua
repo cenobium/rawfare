@@ -983,6 +983,11 @@ local function makeGroupbox(tab, name, side)
         end
         local nativeRemove = option.Remove
         function option:Remove()
+            for index = #parentOption.Addons, 1, -1 do
+                if parentOption.Addons[index] == self then
+                    table.remove(parentOption.Addons, index)
+                end
+            end
             nativeRemove(self)
             if row.Parent then
                 row:Destroy()
