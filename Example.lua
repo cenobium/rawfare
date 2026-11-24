@@ -19,7 +19,7 @@ SaveManager:SetLibrary(Library)
 ThemeManager:SetLibrary(Library)
 SaveManager:SetFolder("UIReborn")
 ThemeManager:SetFolder("UIReborn")
-SaveManager:SetIgnoreIndexes({"MenuKey", "ThemeManager_ThemeList", "ThemeManager_CustomThemeName", "SaveManager_ConfigName", "SaveManager_ConfigList", "SaveManager_ImportConfig", "SaveManager_CommunityList"})
+SaveManager:SetIgnoreIndexes({"ThemeManager_ThemeList", "ThemeManager_CustomThemeName", "SaveManager_ConfigName", "SaveManager_ConfigList", "SaveManager_ImportConfig", "SaveManager_CommunityList"})
 
 local Window = Library:CreateWindow({
     Title = "UI Reborn",
@@ -101,14 +101,15 @@ local MenuTransparency = Menu:AddSlider("MenuTransparency", {
     Max = 1,
     Rounding = 1,
     Callback = function(value)
-        local alpha = math.clamp(value, 0, 1)
+        Library.MenuTransparencyValue = math.clamp(value, 0, 1)
         for _, item in ipairs(Library.ScreenGui:GetDescendants()) do
             if item:IsA("Frame") or item:IsA("ScrollingFrame") or item:IsA("TextButton") then
                 if item:GetAttribute("UIRebornBaseTransparency") == nil then
                     item:SetAttribute("UIRebornBaseTransparency", item.BackgroundTransparency)
                 end
                 local base = item:GetAttribute("UIRebornBaseTransparency")
-                item.BackgroundTransparency = base + (1 - base) * alpha
+                local backgroundAlpha = item:GetAttribute("UIRebornBackgroundAlpha") or 0
+                item.BackgroundTransparency = 1 - (1 - base) * (1 - Library.MenuTransparencyValue) * (1 - backgroundAlpha)
             end
         end
     end
@@ -202,17 +203,19 @@ BackgroundGroup:AddSlider("BackgroundTransparency", {
     Max = 1,
     Rounding = 1,
     Callback = function(value)
-        local alpha = math.clamp(value, 0, 1)
+        Library.BackgroundTransparencyValue = math.clamp(value, 0, 1)
         for _, item in ipairs(Library.ScreenGui:GetDescendants()) do
             if item:IsA("Frame") or item:IsA("ScrollingFrame") then
                 local registry = Library.RegistryMap[item]
                 local isBackground = registry and registry.Properties.BackgroundColor3 == "BackgroundColor"
                 if isBackground then
-                    if item:GetAttribute("UIRebornBackgroundBaseTransparency") == nil then
-                        item:SetAttribute("UIRebornBackgroundBaseTransparency", item.BackgroundTransparency)
+                    if item:GetAttribute("UIRebornBaseTransparency") == nil then
+                        item:SetAttribute("UIRebornBaseTransparency", item.BackgroundTransparency)
                     end
-                    local base = item:GetAttribute("UIRebornBackgroundBaseTransparency")
-                    item.BackgroundTransparency = base + (1 - base) * alpha
+                    local base = item:GetAttribute("UIRebornBaseTransparency")
+                    local menuAlpha = Library.MenuTransparencyValue or 0
+                    item.BackgroundTransparency = 1 - (1 - base) * (1 - menuAlpha) * (1 - Library.BackgroundTransparencyValue)
+                    item:SetAttribute("UIRebornBackgroundAlpha", Library.BackgroundTransparencyValue)
                 end
             end
         end
