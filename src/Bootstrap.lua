@@ -261,7 +261,11 @@ local function makeLibrary(Native)
     })
     configSetup()
     configManager:SetLibrary(library)
-    configManager.Folder = "RivalsUE"
+    if type(isfolder) == "function" and type(makefolder) == "function" then
+        pcall(configManager.SetFolder, configManager, "RivalsUE")
+    else
+        configManager.Folder = "RivalsUE"
+    end
     configManager:IgnoreThemeSettings()
     library.SaveManager = configManager
     local shared = type(getgenv) == "function" and getgenv() or _G
