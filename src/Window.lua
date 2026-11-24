@@ -1651,6 +1651,30 @@ function Window.attach(library, settings)
         end
     end)
     library:GiveSignal(toggleConnection)
+    local activeTouches = {}
+    local touchLatched = false
+    library:GiveSignal(userInput.InputBegan:Connect(function(input)
+        if input.UserInputType ~= Enum.UserInputType.Touch then
+            return
+        end
+        activeTouches[input] = true
+        local count = 0
+        for _ in pairs(activeTouches) do
+            count = count + 1
+        end
+        if count >= 2 and not touchLatched then
+            touchLatched = true
+            window:Toggle()
+        end
+    end))
+    library:GiveSignal(userInput.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            activeTouches[input] = nil
+            if next(activeTouches) == nil then
+                touchLatched = false
+            end
+        end
+    end))
     library.Window = window
     library.CreateWindow = function(self, config)
         if self.Window and self.Window.Root and self.Window.Root.Parent then
