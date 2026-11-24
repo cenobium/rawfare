@@ -308,7 +308,7 @@ The library also exposes registry helpers `AddToRegistry` and `RemoveFromRegistr
 
 ## What is not bundled
 
-The repository currently contains the core library, showcase, and this documentation. Linoria's separate `ThemeManager.lua` and `SaveManager.lua` addons are **not included**. Do not assume `Library.ThemeManager`, `Library.SaveManager`, config-file persistence, or the full ThemeManager/SaveManager API exists in this repo. Those addons can be integrated separately if wanted.
+The core library includes the bundled `Library.ThemeManager` and `Library.SaveManager` modules, plus the Settings showcase in `Example.lua`. It does not bundle game-specific features such as aimbots, ESP, targeting logic, or arbitrary game APIs; those belong in scripts built on top of the UI library. Executor-dependent features such as local file storage and clipboard access require the corresponding executor functions.
 
 ## API parity audit
 
