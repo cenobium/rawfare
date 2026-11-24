@@ -279,7 +279,6 @@ Common option methods:
 Library:Notify("Loaded", 3)
 Library:SetWatermark("My script | user")
 Library:SetWatermarkVisibility(true)
-Library:SetWindowTitle -- use Window:SetWindowTitle("New title")
 Library:Toggle()
 Library:SetLocked(true)
 Library:ToggleLock()
