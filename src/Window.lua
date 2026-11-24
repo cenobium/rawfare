@@ -707,8 +707,9 @@ local function makeGroupbox(tab, name, side)
                 "AddDivider",
                 "AddBlank",
             }) do
-                panelMeta.__index[method] = panelMeta.__index[method] or function(self, ...)
-                    return self.Groupbox[method](self.Groupbox, ...)
+                local methodName = method
+                panelMeta.__index[methodName] = panelMeta.__index[methodName] or function(self, ...)
+                    return self.Groupbox[methodName](self.Groupbox, ...)
                 end
             end
             return panel
