@@ -60,4 +60,4 @@ The default window is a small horizontal rectangle (320 × 230). It can be dragg
 ## Notes
 
 The window builder uses the original UE library methods plus the `Native.tab`, `Native.tabBox`, `Native.textLabel`, `Native.containerSize`, `Native.dependencies`, `Native.valueCallbacks`, `Native.toggle`, `Native.slider`,
-`Native.dropdown`, `Native.colorPicker`, `Native.keyPicker`, and `Native.buttons` factories. The remaining control adapters use the library's original font, color registry, hover, and callback methods. This repository rebuilds the UI toolkit and demo interface; it does not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
+`Native.dropdown`, `Native.colorPicker`, `Native.keyPicker` factories. The remaining control adapters use the library's original font, color registry, hover, and callback methods. This repository rebuilds the UI toolkit and demo interface; it does not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
