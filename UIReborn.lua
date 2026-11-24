@@ -181,7 +181,7 @@ end;
 function Library:MakeDraggable(Instance, Cutoff)
     Instance.Active = true
     local Dragging = false
-    local TouchInput
+    local TouchActive
     local StartPoint
     local StartPosition
 
@@ -218,15 +218,15 @@ function Library:MakeDraggable(Instance, Cutoff)
         end
         if not OnHandle(Point) then return end
         Dragging = true
-        TouchInput = IsTouch and Input or nil
+        TouchActive = IsTouch
         StartPoint = Point
         StartPosition = Instance.AbsolutePosition
     end))
 
     Library:GiveSignal(InputService.InputChanged:Connect(function(Input)
         if not Dragging then return end
-        if TouchInput then
-            if Input.UserInputType == Enum.UserInputType.Touch and Input == TouchInput then
+        if TouchActive then
+            if Input.UserInputType == Enum.UserInputType.Touch then
                 Move((function() local P = Vector2.new(Input.Position.X, Input.Position.Y); if not ScreenGui.IgnoreGuiInset then local I = GuiService:GetGuiInset(); P = P - Vector2.new(I.X, I.Y) end; return P end)())
             end
         elseif Input.UserInputType == Enum.UserInputType.MouseMovement and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
@@ -236,16 +236,16 @@ function Library:MakeDraggable(Instance, Cutoff)
     end))
 
     Library:GiveSignal(InputService.TouchMoved:Connect(function(Input)
-        if Dragging and TouchInput and Input == TouchInput then
+        if Dragging and TouchActive then
             Move(Vector2.new(Input.Position.X, Input.Position.Y))
         end
     end))
 
     Library:GiveSignal(InputService.InputEnded:Connect(function(Input)
-        if TouchInput and Input.UserInputType == Enum.UserInputType.Touch and Input == TouchInput then
+        if TouchActive and Input.UserInputType == Enum.UserInputType.Touch then
             Dragging = false
-            TouchInput = nil
-        elseif not TouchInput and Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            TouchActive = false
+        elseif not TouchActive and Input.UserInputType == Enum.UserInputType.MouseButton1 then
             Dragging = false
         end
     end))
@@ -1057,7 +1057,7 @@ do
             local IsMouse = Input.UserInputType == Enum.UserInputType.MouseButton1
             if not IsTouch and not IsMouse then return end
 
-            local TouchInput = IsTouch and Input or nil
+            local TouchActive = IsTouch
             Update(GetColorInputPosition(Input))
 
             local MoveConnection
@@ -1070,7 +1070,7 @@ do
 
             local function OnMove(Movement)
                 if IsTouch then
-                    if Movement.UserInputType == Enum.UserInputType.Touch and Movement == TouchInput then
+                    if Movement.UserInputType == Enum.UserInputType.Touch then
                         Update(GetColorMovementPosition(Movement))
                     end
                 elseif Movement.UserInputType == Enum.UserInputType.MouseMovement then
@@ -1082,7 +1082,7 @@ do
             MoveConnection = InputService.InputChanged:Connect(OnMove)
             if IsTouch then
                 local TouchConnection = InputService.TouchMoved:Connect(function(Movement)
-                    if Movement == TouchInput then
+                    if Movement.UserInputType == Enum.UserInputType.Touch then
                         Update(Vector2.new(Movement.Position.X, Movement.Position.Y))
                     end
                 end)
@@ -1098,14 +1098,14 @@ do
             EndConnection = InputService.InputEnded:Connect(function(Ended)
                 if IsMouse and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
                     Finish()
-                elseif IsTouch and Ended.UserInputType == Enum.UserInputType.Touch and Ended == TouchInput then
+                elseif IsTouch and Ended.UserInputType == Enum.UserInputType.Touch then
                     Finish()
                 end
             end)
         end
 
         local PickerDragging = false
-        local PickerTouchInput
+        local PickerTouchActive
         local PickerStart
         local PickerOrigin
 
@@ -1145,7 +1145,7 @@ do
                 if IsInside(PickerDrag, Point) then
                     if not Library.Locked then
                         PickerDragging = true
-                        PickerTouchInput = IsTouch and Input or nil
+                        PickerTouchActive = IsTouch
                         PickerStart = Point
                         PickerOrigin = PickerFrameOuter.AbsolutePosition
                     end
@@ -1200,8 +1200,8 @@ do
 
         Library:GiveSignal(InputService.InputChanged:Connect(function(Movement)
             if not PickerDragging then return end
-            if PickerTouchInput then
-                if Movement.UserInputType == Enum.UserInputType.Touch and Movement == PickerTouchInput then
+            if PickerTouchActive then
+                if Movement.UserInputType == Enum.UserInputType.Touch then
                     MovePicker(GetColorMovementPosition(Movement))
                 end
             elseif Movement.UserInputType == Enum.UserInputType.MouseMovement and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
@@ -1211,16 +1211,16 @@ do
         end))
 
         Library:GiveSignal(InputService.TouchMoved:Connect(function(Movement)
-            if PickerDragging and PickerTouchInput and Movement == PickerTouchInput then
+            if PickerDragging and PickerTouchActive then
                 MovePicker(GetColorMovementPosition(Movement))
             end
         end))
 
         Library:GiveSignal(InputService.InputEnded:Connect(function(Ended)
-            if PickerDragging and PickerTouchInput and Ended.UserInputType == Enum.UserInputType.Touch and Ended == PickerTouchInput then
+            if PickerDragging and PickerTouchActive and Ended.UserInputType == Enum.UserInputType.Touch then
                 PickerDragging = false
-                PickerTouchInput = nil
-            elseif PickerDragging and not PickerTouchInput and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
+                PickerTouchActive = false
+            elseif PickerDragging and not PickerTouchActive and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
                 PickerDragging = false
             end
             if Ended.UserInputType == Enum.UserInputType.MouseButton2 and ContextMenu.Container.Visible then
@@ -4658,7 +4658,7 @@ function Library:CreateFloatingControls()
 
     local Input = game:GetService('UserInputService')
     local Dragging = false
-    local TouchInput
+    local TouchActive
     local StartPoint
     local StartPosition
 
@@ -4711,15 +4711,15 @@ function Library:CreateFloatingControls()
         if self.Locked then return end
         if not IsOnDragHandle(Point) then return end
         Dragging = true
-        TouchInput = IsTouch and Began or nil
+        TouchActive = IsTouch
         StartPoint = Point
         StartPosition = Dock.AbsolutePosition
     end))
 
     self:GiveSignal(Input.InputChanged:Connect(function(Moved)
         if not Dragging then return end
-        if TouchInput then
-            if Moved.UserInputType == Enum.UserInputType.Touch and Moved == TouchInput then
+        if TouchActive then
+            if Moved.UserInputType == Enum.UserInputType.Touch then
                 MoveDock(Vector2.new(Moved.Position.X, Moved.Position.Y))
             end
         elseif Moved.UserInputType == Enum.UserInputType.MouseMovement and Input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
@@ -4729,16 +4729,16 @@ function Library:CreateFloatingControls()
     end))
 
     self:GiveSignal(Input.TouchMoved:Connect(function(Moved)
-        if Dragging and TouchInput and Moved == TouchInput then
+        if Dragging and TouchActive then
             MoveDock(Vector2.new(Moved.Position.X, Moved.Position.Y))
         end
     end))
 
     self:GiveSignal(Input.InputEnded:Connect(function(Ended)
-        if TouchInput and Ended.UserInputType == Enum.UserInputType.Touch and Ended == TouchInput then
+        if TouchActive and Ended.UserInputType == Enum.UserInputType.Touch then
             Dragging = false
-            TouchInput = nil
-        elseif not TouchInput and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
+            TouchActive = false
+        elseif not TouchActive and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
             Dragging = false
         end
     end))
