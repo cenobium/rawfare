@@ -561,7 +561,7 @@ local function makeGroupbox(tab, name, side)
     function groupbox:AddColorPicker(value, callback)
         local config = type(value) == "table" and value or {Text = value, Default = Color3.new(1, 1, 1), Callback = callback}
         local row = addRow(22)
-        local title = library:CreateLabel({
+        library:CreateLabel({
             BackgroundTransparency = 1,
             Position = UDim2.fromOffset(2, 0),
             Size = UDim2.new(1, -34, 1, 0),
@@ -582,64 +582,221 @@ local function makeGroupbox(tab, name, side)
             Parent = row,
         })
         register(library, swatch, {BorderColor3 = "OutlineColor"})
-        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Color", "ColorPicker", config.Default or Color3.new(1, 1, 1), config.Callback or callback)
-        option.Transparency = tonumber(config.Transparency) or 0
-        local palette = {
-            Color3.fromRGB(255, 255, 255),
-            Color3.fromRGB(162, 205, 255),
-            Color3.fromRGB(255, 120, 120),
-            Color3.fromRGB(255, 190, 90),
-            Color3.fromRGB(140, 230, 160),
-            Color3.fromRGB(190, 150, 255),
-        }
-        local panel = create(library, "Frame", {
+        local popup = create(library, "Frame", {
             BackgroundColor3 = library.MainColor,
             BorderColor3 = library.OutlineColor,
             BorderSizePixel = 1,
-            Position = UDim2.new(1, -154, 1, 2),
-            Size = UDim2.fromOffset(150, 30),
+            Position = UDim2.fromOffset(0, 0),
+            Size = UDim2.fromOffset(208, 178),
             Visible = false,
             ZIndex = 40,
-            Parent = row,
+            Parent = library.ScreenGui,
         })
-        register(library, panel, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
-        for index, color in ipairs(palette) do
-            local chip = create(library, "TextButton", {
-                AutoButtonColor = false,
-                BackgroundColor3 = color,
-                BorderColor3 = library.OutlineColor,
-                BorderSizePixel = 1,
-                Position = UDim2.fromOffset(5 + (index - 1) * 23, 6),
-                Size = UDim2.fromOffset(19, 18),
-                Text = "",
-                ZIndex = 41,
-                Parent = panel,
-            })
-            chip.MouseButton1Click:Connect(function()
-                option:SetValue(color)
-                panel.Visible = false
-            end)
+        local inner = create(library, "Frame", {
+            BackgroundColor3 = library.MainColor,
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            Position = UDim2.fromOffset(3, 3),
+            Size = UDim2.new(1, -6, 1, -6),
+            ZIndex = 40,
+            Parent = popup,
+        })
+        local sv = create(library, "Frame", {
+            Active = true,
+            BackgroundColor3 = config.Default or Color3.new(1, 1, 1),
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            Position = UDim2.fromOffset(6, 6),
+            Size = UDim2.fromOffset(138, 108),
+            ZIndex = 41,
+            Parent = inner,
+        })
+        local whiteLayer = create(library, "Frame", {
+            BackgroundColor3 = Color3.new(1, 1, 1),
+            BorderSizePixel = 0,
+            Size = UDim2.fromScale(1, 1),
+            ZIndex = 42,
+            Parent = sv,
+        })
+        create(library, "UIGradient", {
+            Rotation = 0,
+            Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0),
+                NumberSequenceKeypoint.new(1, 1),
+            }),
+            Parent = whiteLayer,
+        })
+        local blackLayer = create(library, "Frame", {
+            BackgroundColor3 = Color3.new(0, 0, 0),
+            BorderSizePixel = 0,
+            Size = UDim2.fromScale(1, 1),
+            ZIndex = 43,
+            Parent = sv,
+        })
+        create(library, "UIGradient", {
+            Rotation = 90,
+            Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(1, 0),
+            }),
+            Parent = blackLayer,
+        })
+        local svHandle = create(library, "Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+            BorderColor3 = Color3.new(1, 1, 1),
+            BorderSizePixel = 1,
+            Position = UDim2.fromScale(1, 0),
+            Size = UDim2.fromOffset(8, 8),
+            ZIndex = 44,
+            Parent = sv,
+        })
+        local hue = create(library, "Frame", {
+            Active = true,
+            BackgroundColor3 = Color3.new(1, 1, 1),
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            Position = UDim2.fromOffset(151, 6),
+            Size = UDim2.fromOffset(14, 108),
+            ZIndex = 41,
+            Parent = inner,
+        })
+        local hueHandle = create(library, "Frame", {
+            BackgroundColor3 = Color3.new(1, 1, 1),
+            BorderColor3 = Color3.new(0, 0, 0),
+            BorderSizePixel = 1,
+            Position = UDim2.new(0, -2, 0, 0),
+            Size = UDim2.new(1, 4, 0, 3),
+            ZIndex = 44,
+            Parent = hue,
+        })
+        local alphaBar = create(library, "Frame", {
+            Active = true,
+            BackgroundColor3 = config.Default or Color3.new(1, 1, 1),
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            Position = UDim2.fromOffset(6, 121),
+            Size = UDim2.fromOffset(159, 8),
+            ZIndex = 41,
+            Parent = inner,
+        })
+        create(library, "UIGradient", {
+            Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0),
+                NumberSequenceKeypoint.new(1, 1),
+            }),
+            Parent = alphaBar,
+        })
+        local alphaHandle = create(library, "Frame", {
+            BackgroundColor3 = Color3.new(1, 1, 1),
+            BorderColor3 = Color3.new(0, 0, 0),
+            BorderSizePixel = 1,
+            Position = UDim2.new(1, -2, 0, -3),
+            Size = UDim2.fromOffset(4, 14),
+            ZIndex = 44,
+            Parent = alphaBar,
+        })
+        local rgbInput = create(library, "TextBox", {
+            BackgroundColor3 = library.BackgroundColor,
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            ClearTextOnFocus = false,
+            Font = library.Font,
+            Position = UDim2.fromOffset(6, 139),
+            Size = UDim2.fromOffset(92, 20),
+            Text = "",
+            TextColor3 = library.FontColor,
+            TextSize = 11,
+            ZIndex = 42,
+            Parent = inner,
+        })
+        local hexInput = create(library, "TextBox", {
+            BackgroundColor3 = library.BackgroundColor,
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            ClearTextOnFocus = false,
+            Font = library.Font,
+            Position = UDim2.fromOffset(103, 139),
+            Size = UDim2.fromOffset(62, 20),
+            Text = "",
+            TextColor3 = library.FontColor,
+            TextSize = 11,
+            ZIndex = 42,
+            Parent = inner,
+        })
+        register(library, rgbInput, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor", TextColor3 = "FontColor"})
+        register(library, hexInput, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor", TextColor3 = "FontColor"})
+        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Color", "ColorPicker", config.Default or Color3.new(1, 1, 1), config.Callback or callback)
+        option.Transparency = tonumber(config.Transparency) or 0
+        option.Hue, option.Sat, option.Vib = Color3.toHSV(option.Value)
+        option.Addons = groupbox.Addons or {}
+        groupbox.Addons = option.Addons
+        groupbox.ColorPickerCount = groupbox.ColorPickerCount or 0
+        function option:SetHSVFromRGB(color)
+            self.Hue, self.Sat, self.Vib = Color3.toHSV(color)
         end
-        function option:SetValue(color)
-            self.Value = color
-            swatch.BackgroundColor3 = color
-            invoke(library, self.Callback, color)
-            invoke(library, self.Changed, color)
+        local outlineSlot = captureSlot("OutlineColor", library.OutlineColor)
+        outlineSlot[3] = setmetatable({}, {
+            __index = function(_, key)
+                return library[key]
+            end,
+        })
+        local alphaSlot = captureSlot("Frame", alphaBar)
+        local alphaThumbSlot = captureSlot("Thumb", alphaHandle)
+        local colorFactory = library.Native and library.Native.colorPicker
+        assert(type(colorFactory) == "function", "Native.colorPicker factory missing")
+        local initialize = colorFactory({
+            [0] = option,
+            [1] = library.RunService.RenderStepped,
+            [2] = outlineSlot,
+            [3] = library,
+            [4] = groupbox,
+            [5] = library.Mouse,
+            [6] = rgbInput,
+            [7] = hexInput,
+            [8] = library.Options,
+            [9] = svHandle,
+            [10] = popup,
+            [11] = hue,
+            [12] = sv,
+            [13] = whiteLayer,
+            [14] = alphaSlot,
+            [15] = swatch,
+            [16] = hueHandle,
+            [17] = library.UserInputService,
+            [18] = groupbox,
+            [19] = option.Flag,
+            [20] = inner,
+            [21] = blackLayer,
+            [22] = hueHandle,
+            [23] = alphaThumbSlot,
+            [24] = {Frame = alphaBar},
+        })
+        initialize()
+        local updatePosition = function()
+            popup.Position = UDim2.fromOffset(swatch.AbsolutePosition.X - popup.AbsoluteSize.X + swatch.AbsoluteSize.X, swatch.AbsolutePosition.Y + swatch.AbsoluteSize.Y + 2)
+        end
+        swatch:GetPropertyChangedSignal("AbsolutePosition"):Connect(updatePosition)
+        updatePosition()
+        local originalDisplay = option.Display
+        function option:Display()
+            originalDisplay(self)
             library:UpdateDependencyBoxes()
-            return self
         end
-        function option:SetValueRGB(color, transparency)
-            self.Transparency = tonumber(transparency) or self.Transparency or 0
-            return self:SetValue(color)
-        end
-        swatch.MouseButton1Click:Connect(function()
-            panel.Visible = not panel.Visible
-        end)
-        option:SetValue(option.Value)
+        local nativeRemove = option.Remove
         function option:Remove()
-            panel:Destroy()
-            row:Destroy()
-            library.Options[self.Flag] = nil
+            nativeRemove(self)
+            for index = #groupbox.Addons, 1, -1 do
+                if groupbox.Addons[index] == self then
+                    table.remove(groupbox.Addons, index)
+                end
+            end
+            if popup.Parent then
+                popup:Destroy()
+            end
+            if row.Parent then
+                row:Destroy()
+            end
             groupbox:Resize()
         end
         self:Resize()
