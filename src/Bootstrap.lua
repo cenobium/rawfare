@@ -114,7 +114,7 @@ local function makeLibrary(Native)
     screenGui.ResetOnSpawn = false
     screenGui.IgnoreGuiInset = true
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    screenGui.DisplayOrder = 999
+    screenGui.DisplayOrder = 1
     screenGui.Parent = parent
     protect(screenGui)
     library.ScreenGui = screenGui
@@ -182,6 +182,7 @@ local function makeLibrary(Native)
     for _, child in ipairs(parent:GetChildren()) do
         if child:IsA("ScreenGui") and not existingChildren[child] then
             child.Name = "UI Reborn Enhancement Overlay"
+            child.DisplayOrder = screenGui.DisplayOrder + 1
             library.OverlayGui = child
             break
         end
