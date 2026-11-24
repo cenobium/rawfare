@@ -1,65 +1,40 @@
-# UI Reborn Enhancement: capture wiring
+# Native.library bootstrap captures
 
-This file records only mappings verified from the extracted source. Unknown slots
-must be supplied explicitly; the bootstrap refuses to guess them.
+The bootstrap supplies a complete runtime table for the `Native.library(captures)` factory. Slots are mapped from the factory's actual operations. Some slots are safe adapter values rather than recovered VM object identities; they are marked below.
 
-## Native.library(captures)
+| Slot | Runtime value | Basis |
+|---:|---|---|
+| 0 | Base Library table | Factory extends this object |
+| 1 | `Frame` class lookup wrapper | Used by `Library:Create` for frame construction |
+| 2 | `BindableEvent` class lookup wrapper | Used by `CreateEvent` |
+| 3 | LocalPlayer mouse | Read for pointer X/Y |
+| 4 | `RunService.RenderStepped` | Waited during drag loops |
+| 5 | Cleanup Folder | Destroyed during unload; adapter-owned |
+| 6 | UserInputService | InputBegan and mouse-button state |
+| 7 | Visibility state wrapper | Read by `IsVisible` and input dispatch |
+| 8 | Player getter table | Factory stores its player-list callback here |
+| 9 | Main ScreenGui | DescendantRemoving and unload target |
+| 10 | `gethui()` or CoreGui | Parent for library-owned ScreenGuis |
+| 11 | Team getter table | Factory stores its team-list callback here |
+| 12 | Optional active-container wrapper | Tooltip visibility guard; nil until assigned |
+| 13 | ContextActionService | Unbinds the Freeze action on unload |
+| 14 | Empty metatable | Applied to popout objects |
+| 15 | Dynamic OutlineColor wrapper | Used as a BorderColor3 value |
+| 16 | Cleanup Folder | Destroyed during unload; adapter-owned |
+| 17 | `warn` | Reports property assignment failures |
+| 18 | TextService | TextService:GetTextSize |
+| 19 | RunService | Heartbeat wait for tooltip tracking |
+| 20 | Cleanup Folder | Destroyed during unload; adapter-owned |
+| 21 | Teams | GetTeams |
+| 22 | Players | GetPlayers |
+| 23 | GUI protection adapter | Calls protect_gui/protectgui/syn.protect_gui when present |
 
-| Slot | Verified meaning |
-|---:|---|
-| 0 | Library object extended by the factory |
-| 6 | UserInputService |
-| 13 | ContextActionService |
-| 18 | TextService |
-| 19 | RunService |
-| 21 | Teams service |
-| 22 | Players service |
+The service mappings (6, 13, 18, 19, 21, 22) are directly supported by the factory body. Class wrappers and pointer/event adapters are supplied to satisfy the exact operations visible in that body. The three cleanup folders and empty metatable are lifecycle-safe adapter values; they are not claimed to be the original VM's captured instances.
 
-Evidence in `Rivals_UE_UI_Library.lua`:
-- Slot 6 is read through `InputBegan` and `IsMouseButtonPressed`.
-- Slot 13 receives `UnbindAction('Freeze')`.
-- Slot 18 calls `GetTextSize`.
-- Slot 19 waits on `Heartbeat`.
-- Slot 21 calls `GetTeams()`.
-- Slot 22 calls `GetPlayers()`.
+## Factory adapters
 
-## Unresolved slots
+`src/Bootstrap.lua` initializes the base Library, runs the original `Native.library` factory, then initializes the original theme and configuration managers.
 
-The factory also reads slots 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15,
-16, 17, 20, and 23. Their capture headers alone do not identify the underlying
-runtime values. The bootstrap requires these values through its `bindings`
-argument instead of silently assigning speculative services or instances.
+`src/Window.lua` constructs the compact window and passes each tab's actual UI instances into `Native.tab`. The original factory provides tab selection, warning-box layout, mobile scroll/drag coordination, and the shared tab registry. Groupbox and control APIs are built on the library's original Create/CreateLabel/registry/theme methods.
 
-Observed usage constraints:
-- Slot 1 and slot 2 are lookup wrappers: the source indexes
-  `captures[n][3][captures[n][2]]`.
-- Slot 3 exposes X/Y coordinates.
-- Slot 4 exposes `:Wait()`.
-- Slot 7 is a wrapped boolean read by the library.
-- Slot 9 is an Instance-like parent/container with `DescendantRemoving`
-  and `:Destroy()`.
-- Slot 10 is the parent assigned to the library ScreenGui.
-- Slot 12 wraps an Instance with `Visible` and
-  `GetPropertyChangedSignal('Visible')`.
-- Slot 14 is passed to `setmetatable`.
-- Slot 15 is a wrapped color used as `BorderColor3`.
-- Slot 16, 20, and 5 are destroyed during unload.
-- Slot 17 is called with a result value.
-- Slot 23 is called with the constructed ScreenGui.
-
-These are usage observations, not complete semantic mappings. Confirm the
-original VM capture construction before assigning production values.
-
-The bootstrap now uses capture 10 as the ScreenGui parent, matching the
-library factory's observed assignment. It no longer expects a separate
-`bindings.Parent` override.
-
-## Next implementation sequence
-
-1. Recover the VM's capture construction for every unresolved slot.
-2. Complete configuration, themes, dependencies, and value callback wiring.
-3. Rebuild the exact window and tab glue from the extracted factories.
-4. Wire controls and then reconstruct menu content from the VM string dump.
-
-Do not treat the bootstrap as a finished UI until all captures are mapped and
-the library is exercised in Delta on-device.
+The bootstrap deliberately does not claim to recover the original VM's object identities or compiled gameplay callbacks.
