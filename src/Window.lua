@@ -176,6 +176,7 @@ local function makeGroupbox(tab, name, side)
     end
     function groupbox:AddContainer(height)
         local outer = addRow(height or 50)
+        outer.BackgroundTransparency = 0
         outer.BackgroundColor3 = library.BackgroundColor
         outer.BorderColor3 = library.OutlineColor
         outer.BorderSizePixel = 1
