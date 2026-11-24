@@ -12,14 +12,17 @@ the UI layer only.
 - `src/Bootstrap.lua` creates the base library object, fills verified service
   captures, extends the library, creates its ScreenGui, and publishes the
   shared Library/Options/Toggles tables.
-- `docs/capture-wiring.md` records verified capture mappings and unresolved
-  slots. Unknown captures are required inputs; they are not guessed.
+- `src/Tab.lua` and `src/Tabbox.lua` attach the original UE tab factories
+  after validating every required capture slot.
+- `docs/capture-wiring.md` and `docs/factory-captures.md` record verified
+  service mappings, factory capture roles, and unresolved VM call-site values.
 
 ## Not finished yet
 
 The bootstrap intentionally stops until the remaining VM capture values are
-provided. Window/tab glue, control factories, configuration/theme wiring, and
-the actual menu content still need to be implemented and verified in Delta.
+provided. The original tab and tabbox initializers now have strict adapters;
+the VM's window-construction call site, control factories, configuration/theme
+wiring, and actual menu content still need implementation and Delta testing.
 
 ## Source package
 
