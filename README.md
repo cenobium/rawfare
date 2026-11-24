@@ -10,12 +10,14 @@ Execute the repository entrypoint:
 loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/init.lua"))()
 ```
 
-The entrypoint loads the inline library, installs its bundled fonts and image assets, bootstraps the library, and builds the demo window.
+The entrypoint loads the inline library, installs its bundled fonts and image assets, bootstraps the library, and builds the demo window. The clean library reads from `assets/`; the inline build does not need that folder.
 
 ## Included
 
 - `Rivals_UE_UI_Library.lua`: readable extracted UE library.
 - `Rivals_UE_UI_Library_inline.lua`: single-file build with embedded assets and Delta folder creation.
+- `assets/`: the extracted font files and watermark image used by the clean library.
+- `Rivals_UE_themes.json`: all 13 built-in theme palettes.
 - `src/Bootstrap.lua`: service/capture bootstrap, themes, configuration manager, notifications, and cleanup.
 - `src/Window.lua`: compact window, original UE tab and tabbox factory integration, two-column tabs, groupboxes, and controls.
 - `init.lua`: runnable entrypoint and interface demo.
