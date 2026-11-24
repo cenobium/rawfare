@@ -50,6 +50,10 @@ Observed usage constraints:
 These are usage observations, not complete semantic mappings. Confirm the
 original VM capture construction before assigning production values.
 
+The bootstrap now uses capture 10 as the ScreenGui parent, matching the
+library factory's observed assignment. It no longer expects a separate
+`bindings.Parent` override.
+
 ## Next implementation sequence
 
 1. Recover the VM's capture construction for every unresolved slot.
