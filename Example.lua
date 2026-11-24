@@ -195,6 +195,29 @@ local ColorEffect = Lighting:FindFirstChild("UIRebornColor") or Instance.new("Co
 ColorEffect.Name = "UIRebornColor"
 ColorEffect.Parent = Lighting
 local BackgroundGroup = BackgroundTab:AddLeftGroupbox("Background effects")
+BackgroundGroup:AddSlider("BackgroundTransparency", {
+    Text = "Background transparency",
+    Default = 0,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Callback = function(value)
+        local alpha = math.clamp(value, 0, 1)
+        for _, item in ipairs(Library.ScreenGui:GetDescendants()) do
+            if item:IsA("Frame") or item:IsA("ScrollingFrame") then
+                local registry = Library.RegistryMap[item]
+                local isBackground = registry and registry.Properties.BackgroundColor3 == "BackgroundColor"
+                if isBackground then
+                    if item:GetAttribute("UIRebornBackgroundBaseTransparency") == nil then
+                        item:SetAttribute("UIRebornBackgroundBaseTransparency", item.BackgroundTransparency)
+                    end
+                    local base = item:GetAttribute("UIRebornBackgroundBaseTransparency")
+                    item.BackgroundTransparency = base + (1 - base) * alpha
+                end
+            end
+        end
+    end
+})
 BackgroundGroup:AddSlider("BackgroundBlur", {
     Text = "Blur",
     Default = 0,
@@ -290,12 +313,9 @@ end}):AddButton({Text = "Copy config", Func = function()
     local ok, err = SaveManager:CopyToClipboard()
     notifyResult(ok, err, "Config copied to clipboard")
 end})
-Configuration:AddButton({Text = "Paste clipboard config", Func = function()
-    local getclipboard = (type(getgenv) == "function" and getgenv().getclipboard) or getclipboard
-    if not getclipboard then return Library:Notify("Clipboard read is unavailable", 3) end
-    local ok, value = pcall(getclipboard)
-    if not ok or type(value) ~= "string" then return Library:Notify("Clipboard read failed", 3) end
-    Options.SaveManager_ImportConfig:SetValue(value)
+Configuration:AddButton({Text = "Import from clipboard", Func = function()
+    local ok, err = SaveManager:PasteFromClipboard()
+    notifyResult(ok, err, "Clipboard config imported")
 end})
 Configuration:AddDivider()
 Configuration:AddDropdown("SaveManager_CommunityList", {
