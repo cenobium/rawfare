@@ -21,7 +21,7 @@ local main = UI:CreateTab("Main")
 local interface = main:AddLeftGroupbox("Interface")
 local appearance = main:AddRightGroupbox("Appearance")
 
-interface:AddLabel("RightControl or two-finger touch toggles the full interface")
+interface:AddLabel({Text = "RightControl or\n2-finger touch", TextWrapped = true})
 interface:AddButton({
     Text = "Test notification",
     Func = function()
@@ -77,23 +77,27 @@ appearance:AddToggle({
     end,
 })
 appearance:AddSlider({
-    Text = "Window width",
+    Text = "Width",
     Flag = "UI_Width",
     Min = 280,
     Max = 520,
     Default = 320,
     Suffix = " px",
+    Compact = true,
+    HideMax = true,
     Callback = function(value)
         UI.Root.Size = UDim2.fromOffset(value, UI.Root.Size.Y.Offset)
     end,
 })
 appearance:AddSlider({
-    Text = "Window height",
+    Text = "Height",
     Flag = "UI_Height",
     Min = 180,
     Max = 420,
     Default = 230,
     Suffix = " px",
+    Compact = true,
+    HideMax = true,
     Callback = function(value)
         UI.Root.Size = UDim2.fromOffset(UI.Root.Size.X.Offset, value)
     end,
