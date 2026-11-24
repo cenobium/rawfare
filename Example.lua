@@ -88,13 +88,13 @@ Menu:AddLabel("Menu key"):AddKeyPicker("MenuKey", {
     Mode = "Toggle",
     Text = "Menu",
     NoUI = true,
-    ChangedCallback = function(key)
+    ChangedCallback = function()
         Library.ToggleKeybind = Options.MenuKey
     end
 })
 Library.ToggleKeybind = Options.MenuKey
 
-local MenuTransparency = Menu:AddSlider("MenuTransparency", {
+Menu:AddSlider("MenuTransparency", {
     Text = "Menu transparency",
     Default = 0,
     Min = 0,
@@ -125,17 +125,8 @@ Menu:AddDropdown("KeybindMenuMode", {
         end
     end
 })
-Menu:AddButton({
-    Text = "Unload library",
-    Func = function()
-        Library:Unload()
-    end
-})
 
-local ThemeBox = Tabs.Settings:AddLeftTabbox("Theme / Background")
-local ThemeTab = ThemeBox:AddTab("Theme")
-local BackgroundTab = ThemeBox:AddTab("Background")
-local ThemeGroup = ThemeTab:AddLeftGroupbox("Theme colors")
+local ThemeGroup = Tabs.Settings:AddLeftGroupbox("Theme")
 local function addThemeColor(id, title, field)
     ThemeGroup:AddLabel(title):AddColorPicker(id, {
         Default = Library[field],
@@ -152,14 +143,13 @@ addThemeColor("AccentColor", "Accent color", "AccentColor")
 addThemeColor("BackgroundColor", "Background color", "BackgroundColor")
 addThemeColor("OutlineColor", "Outline color", "OutlineColor")
 
-local builtInThemes = {}
-for name in pairs(ThemeManager.BuiltInThemes) do table.insert(builtInThemes, name) end
-table.sort(builtInThemes)
-local customThemes = ThemeManager:RefreshCustomThemes()
-for _, name in ipairs(customThemes) do table.insert(builtInThemes, name) end
+local themeNames = {}
+for name in pairs(ThemeManager.BuiltInThemes) do table.insert(themeNames, name) end
+for _, name in ipairs(ThemeManager:RefreshCustomThemes()) do table.insert(themeNames, name) end
+table.sort(themeNames)
 ThemeGroup:AddDropdown("ThemeManager_ThemeList", {
     Text = "Theme list",
-    Values = builtInThemes,
+    Values = themeNames,
     Default = ThemeManager:GetDefault(),
     Callback = function(name)
         if name then
@@ -169,35 +159,35 @@ ThemeGroup:AddDropdown("ThemeManager_ThemeList", {
     end
 })
 ThemeGroup:AddInput("ThemeManager_CustomThemeName", {
-    Text = "Custom theme name",
+    Text = "Theme name",
     Default = "",
-    Placeholder = "Theme name"
+    Placeholder = "New theme name"
 })
 ThemeGroup:AddButton({Text = "Save theme", Func = function()
     local ok, err = ThemeManager:SaveCustomTheme(Options.ThemeManager_CustomThemeName.Value)
     Library:Notify(ok and "Theme saved" or tostring(err), 3)
-    local values = {}
-    for name in pairs(ThemeManager.BuiltInThemes) do table.insert(values, name) end
-    for _, name in ipairs(ThemeManager:RefreshCustomThemes()) do table.insert(values, name) end
-    table.sort(values)
-    Options.ThemeManager_ThemeList:SetValues(values)
+    local names = {}
+    for name in pairs(ThemeManager.BuiltInThemes) do table.insert(names, name) end
+    for _, name in ipairs(ThemeManager:RefreshCustomThemes()) do table.insert(names, name) end
+    table.sort(names)
+    Options.ThemeManager_ThemeList:SetValues(names)
 end}):AddButton({Text = "Set default", Func = function()
     local name = Options.ThemeManager_ThemeList.Value
     if not name then return Library:Notify("Select a theme", 2) end
     local ok, err = ThemeManager:SaveDefault(name)
     Library:Notify(ok and ("Default theme: " .. name) or tostring(err), 3)
 end})
+ThemeGroup:AddButton({Text = "Refresh themes", Func = function()
+    local names = {}
+    for name in pairs(ThemeManager.BuiltInThemes) do table.insert(names, name) end
+    for _, name in ipairs(ThemeManager:RefreshCustomThemes()) do table.insert(names, name) end
+    table.sort(names)
+    Options.ThemeManager_ThemeList:SetValues(names)
+end})
 
-local Lighting = game:GetService("Lighting")
-local Blur = Lighting:FindFirstChild("UIRebornBlur") or Instance.new("BlurEffect")
-Blur.Name = "UIRebornBlur"
-Blur.Parent = Lighting
-local ColorEffect = Lighting:FindFirstChild("UIRebornColor") or Instance.new("ColorCorrectionEffect")
-ColorEffect.Name = "UIRebornColor"
-ColorEffect.Parent = Lighting
-local BackgroundGroup = BackgroundTab:AddLeftGroupbox("Background effects")
+local BackgroundGroup = Tabs.Settings:AddRightGroupbox("Background")
 BackgroundGroup:AddSlider("BackgroundTransparency", {
-    Text = "Background transparency",
+    Text = "Transparency",
     Default = 0,
     Min = 0,
     Max = 1,
@@ -221,6 +211,13 @@ BackgroundGroup:AddSlider("BackgroundTransparency", {
         end
     end
 })
+local Lighting = game:GetService("Lighting")
+local Blur = Lighting:FindFirstChild("UIRebornBlur") or Instance.new("BlurEffect")
+Blur.Name = "UIRebornBlur"
+Blur.Parent = Lighting
+local ColorEffect = Lighting:FindFirstChild("UIRebornColor") or Instance.new("ColorCorrectionEffect")
+ColorEffect.Name = "UIRebornColor"
+ColorEffect.Parent = Lighting
 BackgroundGroup:AddSlider("BackgroundBlur", {
     Text = "Blur",
     Default = 0,
@@ -273,8 +270,7 @@ local function notifyResult(ok, err, successText)
     Library:Notify(ok and successText or tostring(err), 3)
 end
 Configuration:AddButton({Text = "Create config", Func = function()
-    local name = Options.SaveManager_ConfigName.Value
-    local ok, err = SaveManager:Save(name)
+    local ok, err = SaveManager:Save(Options.SaveManager_ConfigName.Value)
     notifyResult(ok, err, "Config created")
     if ok then refreshConfigs() end
 end}):AddButton({Text = "Load config", Func = function()
@@ -290,8 +286,7 @@ end}):AddButton({Text = "Delete config", Func = function()
     if ok then refreshConfigs() end
 end})
 Configuration:AddButton({Text = "Refresh list", Func = refreshConfigs})
-local autoloadName = SaveManager:GetAutoload() or "none"
-local autoloadLabel = Configuration:AddLabel("Current autoload config: " .. autoloadName, true)
+local autoloadLabel = Configuration:AddLabel("Current autoload config: " .. (SaveManager:GetAutoload() or "none"), true)
 Configuration:AddButton({Text = "Set autoload", Func = function()
     local name = Options.SaveManager_ConfigList.Value
     if not name then return Library:Notify("Select a config", 2) end
