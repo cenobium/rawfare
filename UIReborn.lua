@@ -31,7 +31,6 @@ local Options = {};
 Environment.Toggles = Toggles;
 Environment.Options = Options;
 
-Library_PLACEHOLDER = nil
 
 local Library = {
     Registry = {};
