@@ -1238,7 +1238,14 @@ do
 
             ContainerLabel.Text = string.format('[%s] %s (%s)', KeyPicker.Value, Info.Text, KeyPicker.Mode);
 
-            ContainerLabel.Visible = true;
+            local listMode = Library.KeybindListMode or "All"
+            if listMode == "Active" then
+                ContainerLabel.Visible = State
+            elseif listMode == "Toggled" then
+                ContainerLabel.Visible = KeyPicker.Mode == "Toggle" and KeyPicker.Toggled
+            else
+                ContainerLabel.Visible = true
+            end
             ContainerLabel.TextColor3 = State and Library.AccentColor or Library.FontColor;
 
             Library.RegistryMap[ContainerLabel].Properties.TextColor3 = State and 'AccentColor' or 'FontColor';
