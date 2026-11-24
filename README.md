@@ -1,63 +1,35 @@
-# UI Reborn Enhancement
+# UI Reborn
 
-A compact, touch-ready Roblox Luau UI library built around the extracted Rivals UE interface source.
+A compact Roblox Luau UI library based on the LinoriaLib architecture.
 
-## Run in Delta
+## Files
 
-Execute the repository entrypoint:
+- `UIReborn.lua` - the library source. Load it to create your own interface.
+- `Example.lua` - a working showcase with tabs, groupboxes and controls.
+- `docs/README.md` - API and layout guide.
+- `LICENSE` - MIT license and upstream attribution.
+
+## Run the showcase
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/init.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/Example.lua"))()
 ```
 
-The entrypoint loads the inline library, installs its bundled fonts and image assets, bootstraps the library, and builds the demo window. The clean library reads from `assets/`; the inline build does not need that folder.
-
-## Included
-
-- `Rivals_UE_UI_Library.lua`: readable extracted UE library.
-- `Rivals_UE_UI_Library_inline.lua`: single-file build with embedded assets and Delta folder creation.
-- `assets/`: the extracted font files and watermark image used by the clean library.
-- `Rivals_UE_themes.json`: all 13 built-in theme palettes.
-- `src/Bootstrap.lua`: service/capture bootstrap, themes, configuration manager, notifications, and cleanup.
-- `src/Window.lua`: compact window, original UE tab and tabbox factory integration, two-column tabs, groupboxes, and controls.
-- `init.lua`: runnable entrypoint and interface demo.
-
-## Window API
+## Load the library in your own script
 
 ```lua
-local base = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Native = loadstring(game:HttpGet(base .. "Rivals_UE_UI_Library_inline.lua"))()
-local Bootstrap = loadstring(game:HttpGet(base .. "src/Bootstrap.lua"))()
-local WindowModule = loadstring(game:HttpGet(base .. "src/Window.lua"))()
-
-local Library = Bootstrap.start(Native)
-local Window = WindowModule.attach(Library, {
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua"))()
+local Window = Library:CreateWindow({
     Title = "My UI",
-    Width = 320,
-    Height = 230,
-    ToggleKey = Enum.KeyCode.RightControl,
+    Center = true,
+    AutoShow = true,
+    Size = UDim2.fromOffset(440, 340)
 })
-
-local tab = Window:CreateTab("Main")
-local left = tab:AddLeftGroupbox("General")
-local right = tab:AddRightGroupbox("Settings")
-
-left:AddToggle({Text = "Enabled", Default = false, Callback = function(value) end})
-left:AddSlider({Text = "Amount", Min = 0, Max = 100, Default = 25})
-left:AddDropdown({Text = "Mode", Values = {"One", "Two"}, Default = "One"})
-right:AddButton({Text = "Run", Func = function() end})
+local Main = Window:AddTab("Main")
+local Group = Main:AddLeftGroupbox("General")
+Group:AddButton({Text = "Click me", Func = function() Library:Notify("Hello", 2) end})
 ```
 
-Available groupbox controls: `AddToggle`, `AddSlider`, `AddDropdown`,
-`AddColorPicker`, `AddKeyPicker`, `AddInput`, `AddButton`, `AddLabel`,
-`AddDivider`, `AddBlank`, `AddContainer`, `AddDependency`, and `AddButtonGroup`.
+See [the documentation](docs/README.md) for controls and layout examples.
 
-Tabs expose `AddLeftGroupbox`, `AddRightGroupbox`, `AddGroupbox`,
-`AddLeftTabbox`, `AddRightTabbox`, and `AddSection`.
-
-The default window is a small horizontal rectangle (320 × 230). It can be dragged from the title area, resized from its lower-right corner, and hidden/restored with RightControl or a two-finger touch. Hiding disables the main interface, drag overlay, and tracked popouts; it does not collapse the window into a bar or icon.
-
-## Notes
-
-The window builder uses the original UE library methods plus the `Native.tab`, `Native.tabBox`, `Native.textLabel`, `Native.containerSize`, `Native.dependencies`, `Native.valueCallbacks`, `Native.toggle`, `Native.slider`,
-`Native.dropdown`, `Native.colorPicker`, `Native.keyPicker` factories. The remaining control adapters use the library's original font, color registry, hover, and callback methods. This repository rebuilds the UI toolkit and demo interface; it does not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
+The library has not yet been runtime-tested in Delta on iOS.
