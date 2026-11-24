@@ -562,6 +562,10 @@ local function makeGroupbox(tab, name, side)
         local keyButton = button(library, row, tostring(config.Default and config.Default.Name or "None"), UDim2.fromOffset(76, 20), UDim2.new(1, -76, 0, 1))
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "KeyPicker", "KeyPicker", config.Default or Enum.KeyCode.Unknown, config.Callback or callback)
         option.Mode = config.Mode or "Toggle"
+        local active = false
+        local function matches(input)
+            return input.KeyCode == option.Value or input.UserInputType == option.Value
+        end
         function option:SetValue(nextValue)
             if type(nextValue) == "table" then
                 self.Value = nextValue[1] or Enum.KeyCode.Unknown
@@ -570,7 +574,6 @@ local function makeGroupbox(tab, name, side)
                 self.Value = nextValue or Enum.KeyCode.Unknown
             end
             keyButton.Text = tostring(self.Value.Name or self.Value)
-            invoke(library, self.Callback, self.Value, self.Mode)
             invoke(library, self.Changed, self.Value, self.Mode)
             return self
         end
@@ -579,23 +582,40 @@ local function makeGroupbox(tab, name, side)
             listening = true
             keyButton.Text = "Press key"
         end)
-        local connection
-        connection = library.UserInputService.InputBegan:Connect(function(input, processed)
-            if not listening or processed then
+        local beganConnection = library.UserInputService.InputBegan:Connect(function(input, processed)
+            if listening and not processed then
+                if input.UserInputType == Enum.UserInputType.Keyboard then
+                    option:SetValue(input.KeyCode)
+                    listening = false
+                elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+                    option:SetValue(input.UserInputType)
+                    listening = false
+                end
                 return
             end
-            if input.UserInputType == Enum.UserInputType.Keyboard then
-                option:SetValue(input.KeyCode)
-                keyButton.Text = input.KeyCode.Name
-                listening = false
-            elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
-                option:SetValue(input.UserInputType)
-                keyButton.Text = input.UserInputType.Name
-                listening = false
+            if processed or not matches(input) then
+                return
+            end
+            if option.Mode == "Toggle" then
+                active = not active
+            else
+                active = true
+            end
+            invoke(library, option.Callback, active, option.Mode)
+        end)
+        local endedConnection = library.UserInputService.InputEnded:Connect(function(input)
+            if option.Mode == "Hold" and active and matches(input) then
+                active = false
+                invoke(library, option.Callback, false, option.Mode)
             end
         end)
+        function option:SetMode(mode)
+            self.Mode = mode
+            return self
+        end
         function option:Remove()
-            connection:Disconnect()
+            beganConnection:Disconnect()
+            endedConnection:Disconnect()
             row:Destroy()
             library.Options[self.Flag] = nil
             groupbox:Resize()
