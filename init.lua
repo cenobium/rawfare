@@ -126,6 +126,18 @@ controls:AddInput({
     Flag = "Demo_Input",
     Default = "Type here",
 })
+local previewContainer = controls:AddContainer(42)
+Library:CreateLabel({
+    BackgroundTransparency = 1,
+    Size = UDim2.fromScale(1, 1),
+    Text = "Original container size factory",
+    TextSize = 12,
+    Parent = previewContainer:GetInner(),
+})
+local dependent = controls:AddDependency({
+    {Library.Toggles.Demo_Toggle, true},
+}, "Toggle dependent")
+dependent:AddLabel("This section appears when the example toggle is enabled")
 
 local profileTabs = main:AddLeftTabbox("Profiles")
 local standardProfile = profileTabs:AddTab("Standard")
