@@ -44,9 +44,7 @@ The factory also uses the library object for `IsMobile`, `CanDrag`,
 
 ## Runtime adapters
 
-- `src/Tab.lua` validates all 16 slots and runs the original `Native.tab`
-  initializer without replacing its visuals or behavior.
-- `src/Tabbox.lua` validates all 10 slots and runs the original
-  `Native.tabBox` initializer.
-- These adapters do not fabricate capture values. The original VM's exact
-  capture construction remains the source of truth.
+`src/Window.lua` constructs the real tab and tabbox instances, then passes
+those instances into the original `Native.tab` and `Native.tabBox` factories.
+It supplies the observed slot roles directly and retains the original factory
+selection, layout, resize, and mobile scroll behavior.
