@@ -128,7 +128,7 @@ local function makeLibrary(Native)
     local optionalGui = makeSlot("ActiveContainer", nil)
     local captures = {
         [0] = library,
-        [1] = makeSlot("new", Instance.new),
+        [1] = makeSlot("Frame", "Frame"),
         [2] = makeSlot("BindableEvent", nil),
         [3] = mouse,
         [4] = runService.RenderStepped,
@@ -152,7 +152,7 @@ local function makeLibrary(Native)
         [22] = players,
         [23] = protect,
     }
-    captures[1][3] = {new = Instance.new}
+    captures[1][3] = {Frame = "Frame"}
     captures[2][3] = {BindableEvent = "BindableEvent"}
     captures[7][3] = {Visible = true}
     captures[8][3] = playerValues
