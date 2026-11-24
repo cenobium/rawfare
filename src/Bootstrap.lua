@@ -118,6 +118,10 @@ local function makeLibrary(Native)
     screenGui.Parent = parent
     protect(screenGui)
     library.ScreenGui = screenGui
+    local existingChildren = {}
+    for _, child in ipairs(parent:GetChildren()) do
+        existingChildren[child] = true
+    end
     local cleanupA = makeFolder(screenGui, "UE_Cleanup_A")
     local cleanupB = makeFolder(screenGui, "UE_Cleanup_B")
     local cleanupC = makeFolder(screenGui, "UE_Cleanup_C")
@@ -175,6 +179,18 @@ local function makeLibrary(Native)
     local extend = Native.library(captures)
     assert(type(extend) == "function", "Native.library did not return its extension")
     extend()
+    for _, child in ipairs(parent:GetChildren()) do
+        if child:IsA("ScreenGui") and not existingChildren[child] then
+            child.Name = "UI Reborn Enhancement Overlay"
+            library.OverlayGui = child
+            break
+        end
+    end
+    library:OnUnload(function()
+        if library.OverlayGui then
+            library.OverlayGui:Destroy()
+        end
+    end)
     library.Captures = captures
     library.Native = Native
     library.CaptureState = state
