@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124touchslider2"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124touchslider3"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
@@ -109,6 +109,9 @@ Dock.BorderSizePixel = 1
 Dock.Active = true
 Dock.Parent = DockGui
 
+local DockInputService = game:GetService("UserInputService")
+local DockRunService = game:GetService("RunService")
+
 local DockTitle = Instance.new("TextLabel")
 DockTitle.Name = "DragHandle"
 DockTitle.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
@@ -149,7 +152,7 @@ DockTitle.InputBegan:Connect(function(Input)
         return
     end
 
-    local Start = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Library.Mouse.X, Library.Mouse.Y)
+    local Start = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or DockInputService:GetMouseLocation()
     local Origin = Dock.AbsolutePosition
     local Dragging = true
     local EndConnection
@@ -168,8 +171,8 @@ DockTitle.InputBegan:Connect(function(Input)
         local X = math.clamp(Origin.X + Point.X - Start.X, 4, math.max(4, Viewport.X - Dock.AbsoluteSize.X - 4))
         local Y = math.clamp(Origin.Y + Point.Y - Start.Y, 4, math.max(4, Viewport.Y - Dock.AbsoluteSize.Y - 4))
         Dock.Position = UDim2.fromOffset(X + Dock.AbsoluteSize.X * 0.5, Y + Dock.AbsoluteSize.Y)
-        game:GetService("RunService").RenderStepped:Wait()
-    until (IsTouch and not Dragging) or (not IsTouch and not game:GetService("UserInputService"):IsMouseButtonPressed(Enum.UserInputType.MouseButton1))
+        DockRunService.RenderStepped:Wait()
+    until (IsTouch and not Dragging) or (not IsTouch and not DockInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1))
 
     if EndConnection then
         EndConnection:Disconnect()
