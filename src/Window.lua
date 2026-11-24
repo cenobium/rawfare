@@ -450,7 +450,7 @@ local function makeGroupbox(tab, name, side)
     function groupbox:AddDropdown(value, callback)
         local config = type(value) == "table" and value or {Text = value, Values = {}, Default = nil, Callback = callback}
         local row = addRow(23)
-        local title = library:CreateLabel({
+        library:CreateLabel({
             BackgroundTransparency = 1,
             Position = UDim2.fromOffset(2, 0),
             Size = UDim2.new(0.42, 0, 1, 0),
@@ -460,80 +460,98 @@ local function makeGroupbox(tab, name, side)
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = row,
         })
-        local values = config.Values or {}
-        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Dropdown", "Dropdown", config.Default or values[1], config.Callback or callback)
-        option.Multi = config.Multi == true
-        local picker = button(library, row, tostring(option.Value or "Select"), UDim2.new(0.56, 0, 1, 0), UDim2.new(0.44, 0, 0, 0))
+        local anchor = create(library, "Frame", {
+            Active = true,
+            BackgroundColor3 = library.MainColor,
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            Position = UDim2.new(0.44, 0, 0, 1),
+            Size = UDim2.new(0.56, 0, 1, -2),
+            Parent = row,
+        })
+        register(library, anchor, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
+        local valueLabel = library:CreateLabel({
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(5, 0),
+            Size = UDim2.new(1, -22, 1, 0),
+            Text = "",
+            TextColor3 = library.FontColor,
+            TextSize = 12,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = anchor,
+        })
+        local arrow = library:CreateLabel({
+            BackgroundTransparency = 1,
+            Position = UDim2.new(1, -18, 0, 0),
+            Size = UDim2.fromOffset(16, 20),
+            Text = ">",
+            TextColor3 = library.FontColor,
+            TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Center,
+            Parent = anchor,
+        })
         local popup = create(library, "Frame", {
             BackgroundColor3 = library.MainColor,
             BorderColor3 = library.OutlineColor,
             BorderSizePixel = 1,
-            Position = UDim2.new(0.44, 0, 1, 2),
-            Size = UDim2.new(0.56, 0, 0, 0),
             Visible = false,
-            ZIndex = 40,
-            Parent = row,
+            ZIndex = 20,
+            Parent = library.ScreenGui,
         })
         register(library, popup, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
-        local popupLayout = create(library, "UIListLayout", {
-            SortOrder = Enum.SortOrder.LayoutOrder,
-            Parent = popup,
+        local outsideInput = create(library, "TextButton", {
+            Active = true,
+            AutoButtonColor = false,
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Text = "",
+            Size = UDim2.fromScale(1, 1),
+            ZIndex = 0,
+            Parent = library.ScreenGui,
         })
-        local function redraw()
-            picker.Text = type(option.Value) == "table" and table.concat(option.Value, ", ") or tostring(option.Value or "Select")
-        end
-        function option:SetValue(nextValue)
-            self.Value = nextValue
-            redraw()
-            invoke(library, self.Callback, nextValue)
-            invoke(library, self.Changed, nextValue)
-            library:UpdateDependencyBoxes()
-            return self
-        end
-        for index, item in ipairs(values) do
-            local choice = create(library, "TextButton", {
-                AutoButtonColor = false,
-                BackgroundColor3 = library.MainColor,
-                BorderSizePixel = 0,
-                Font = library.Font,
-                Text = tostring(item),
-                TextColor3 = library.FontColor,
-                TextSize = 12,
-                Size = UDim2.new(1, 0, 0, 20),
-                LayoutOrder = index,
-                ZIndex = 41,
-                Parent = popup,
-            })
-            choice.MouseButton1Click:Connect(function()
-                if config.Multi then
-                    local selected = type(option.Value) == "table" and table.clone(option.Value) or {}
-                    local found = table.find(selected, item)
-                    if found then
-                        table.remove(selected, found)
-                    else
-                        table.insert(selected, item)
-                    end
-                    option:SetValue(selected)
-                else
-                    option:SetValue(item)
-                    popup.Visible = false
-                end
-            end)
-        end
-        popupLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            popup.Size = UDim2.new(1, 0, 0, math.min(popupLayout.AbsoluteContentSize.Y, 120))
-        end)
-        picker.MouseButton1Click:Connect(function()
-            popup.Visible = not popup.Visible
-            if popup.Visible then
-                popup.Size = UDim2.new(1, 0, 0, math.min(popupLayout.AbsoluteContentSize.Y, 120))
-            end
-        end)
-        redraw()
+        local values = config.Values or {}
+        local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Dropdown", "Dropdown", config.Multi and {} or config.Default or values[1], config.Callback or callback)
+        option.Values = values
+        option.Multi = config.Multi == true
+        option.AllowNull = config.AllowNull == true
+        option.Illegal = config.Illegal == true
+        option.Idx = option.Flag
+        local borderSlot = captureSlot("OutlineColor", library.OutlineColor)
+        borderSlot[3] = setmetatable({}, {
+            __index = function(_, key)
+                return library[key]
+            end,
+        })
+        local dropdownFactory = library.Native and library.Native.dropdown
+        assert(type(dropdownFactory) == "function", "Native.dropdown factory missing")
+        local initialize = dropdownFactory({
+            [0] = option,
+            [1] = library,
+            [2] = popup,
+            [3] = {
+                Multi = option.Multi,
+                Default = config.Default,
+                AllowNull = option.AllowNull,
+                Illegal = option.Illegal,
+                BlankSize = 0,
+            },
+            [4] = borderSlot,
+            [5] = groupbox,
+            [6] = library.Options,
+            [7] = tonumber(config.MaxVisibleRows) or 6,
+            [8] = anchor,
+            [9] = library.Mouse,
+            [10] = arrow,
+            [11] = valueLabel,
+            [12] = option.Flag,
+            [13] = {popup, outsideInput},
+            [14] = outsideInput,
+            [15] = captureSlot("Frame", "Frame"),
+        })
+        initialize()
+        local nativeRemove = option.Remove
         function option:Remove()
-            popup:Destroy()
-            row:Destroy()
-            library.Options[self.Flag] = nil
+            nativeRemove(self)
             groupbox:Resize()
         end
         self:Resize()
