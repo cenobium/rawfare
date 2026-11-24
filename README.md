@@ -17,7 +17,7 @@ The entrypoint loads the inline library, installs its bundled fonts and image as
 - `Rivals_UE_UI_Library.lua`: readable extracted UE library.
 - `Rivals_UE_UI_Library_inline.lua`: single-file build with embedded assets and Delta folder creation.
 - `src/Bootstrap.lua`: service/capture bootstrap, themes, configuration manager, notifications, and cleanup.
-- `src/Window.lua`: compact window, original UE tab factory integration, two-column tabs, groupboxes, and controls.
+- `src/Window.lua`: compact window, original UE tab and tabbox factory integration, two-column tabs, groupboxes, and controls.
 - `init.lua`: runnable entrypoint and interface demo.
 
 ## Window API
