@@ -23,7 +23,7 @@ local Window = Library:CreateWindow({
     Title = "My UI",
     Center = true,
     AutoShow = true,
-    Size = UDim2.fromOffset(440, 340)
+    Size = UDim2.fromOffset(560, 300)
 })
 local Main = Window:AddTab("Main")
 local Group = Main:AddLeftGroupbox("General")
