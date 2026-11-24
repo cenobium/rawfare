@@ -237,7 +237,7 @@ function Library:MakeDraggable(Instance, Cutoff)
 
     Library:GiveSignal(InputService.TouchMoved:Connect(function(Input)
         if Dragging and TouchActive then
-            Move(Vector2.new(Input.Position.X, Input.Position.Y))
+            Move((function() local P = Vector2.new(Input.Position.X, Input.Position.Y); if not ScreenGui.IgnoreGuiInset then local I = GuiService:GetGuiInset(); P = P - Vector2.new(I.X, I.Y) end; return P end)())
         end
     end))
 
@@ -1083,7 +1083,7 @@ do
             if IsTouch then
                 local TouchConnection = InputService.TouchMoved:Connect(function(Movement)
                     if Movement.UserInputType == Enum.UserInputType.Touch then
-                        Update(Vector2.new(Movement.Position.X, Movement.Position.Y))
+                        Update(GetColorMovementPosition(Movement))
                     end
                 end)
                 local Previous = MoveConnection
