@@ -34,6 +34,13 @@ interface:AddButton({
         UI:Unload()
     end,
 })
+local resetButton = interface:AddButtonGroup()
+resetButton:AddButton({
+    Text = "Reset theme",
+    Func = function()
+        Library.ThemeManager:ApplyTheme("Default")
+    end,
+})
 
 local themes = {
     "Default",
