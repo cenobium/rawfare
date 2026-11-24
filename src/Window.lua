@@ -873,6 +873,17 @@ function Window.attach(library, settings)
             right.CanvasSize = UDim2.fromOffset(0, rightLayout.AbsoluteContentSize.Y + 8)
         end)
         local tabButton = button(library, tabBar, name, UDim2.new(0, 72, 1, 0))
+        tabButton.Text = ""
+        local tabText = library:CreateLabel({
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
+            Text = name,
+            TextColor3 = library.FontColor,
+            TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Center,
+            Parent = tabButton,
+        })
+        register(library, tabText, {TextColor3 = "FontColor"})
         local indicator = create(library, "Frame", {
             BackgroundColor3 = library.AccentColor,
             BorderSizePixel = 0,
@@ -895,25 +906,33 @@ function Window.attach(library, settings)
             Visible = false,
             Parent = page,
         })
-        local warningTitle = library:CreateLabel({
+        local warningContent = create(library, "Frame", {
+            BackgroundTransparency = 1,
             Position = UDim2.fromOffset(5, 1),
-            Size = UDim2.new(1, -10, 0, 18),
+            Size = UDim2.new(1, -10, 1, -2),
+            Parent = warningFrame,
+        })
+        local warningTitle = library:CreateLabel({
+            Position = UDim2.fromOffset(0, 0),
+            Size = UDim2.new(1, 0, 0, 18),
             Text = "",
             TextColor3 = library.AccentColor,
             TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = warningFrame,
+            Parent = warningContent,
         })
         local warningText = library:CreateLabel({
-            Position = UDim2.fromOffset(5, 20),
-            Size = UDim2.new(1, -10, 0, 0),
+            Position = UDim2.fromOffset(0, 19),
+            Size = UDim2.new(1, 0, 0, 0),
             Text = "",
             TextColor3 = library.FontColor,
             TextSize = 12,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = warningFrame,
+            Parent = warningContent,
         })
+        register(library, warningFrame, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor"})
+        register(library, warningTitle, {TextColor3 = "AccentColor"})
         local tab = {
             Name = name,
             Window = self,
@@ -951,14 +970,14 @@ function Window.attach(library, settings)
                 [4] = captureSlot("Warning", warningFrame),
                 [5] = right,
                 [6] = tabButton,
-                [7] = tabButton,
+                [7] = tabText,
                 [8] = page,
                 [9] = captureSlot("Body", warningText),
                 [10] = name,
                 [11] = captureSlot("Title", warningTitle),
                 [12] = library,
                 [13] = indicator,
-                [14] = captureSlot("Container", warningFrame),
+                [14] = captureSlot("Container", warningContent),
                 [15] = tabStroke,
             }
             local initializeTab = nativeTab(nativeCaptures)
