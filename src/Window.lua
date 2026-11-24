@@ -517,7 +517,7 @@ local function makeGroupbox(tab, name, side)
             [12] = track,
             [13] = option.Flag,
             [14] = library.Options,
-            [15] = {title, valueLabel, track, fill, thumb},
+            [15] = {title, valueLabel, track},
             [16] = library.UserInputService,
             [17] = library.RunService.RenderStepped,
         })
