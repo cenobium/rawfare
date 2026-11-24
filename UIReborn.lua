@@ -430,6 +430,16 @@ function Library:Unload()
         Library.OnUnload()
     end
 
+    if Library.FloatingControls then
+        pcall(function() Library.FloatingControls:Destroy() end)
+        Library.FloatingControls = nil
+    end
+    if Library.SettingsEffects then
+        for _, Effect in ipairs(Library.SettingsEffects) do
+            pcall(function() Effect:Destroy() end)
+        end
+        Library.SettingsEffects = nil
+    end
     ScreenGui:Destroy()
 end
 
@@ -3808,6 +3818,7 @@ function Library:CreateWindow(...)
     if Config.AutoShow then task.spawn(Library.Toggle) end
 
     Window.Holder = Outer;
+    Library:CreateFloatingControls()
 
     return Window;
 end;
@@ -4175,6 +4186,382 @@ end
 
 ThemeManager:BuildFolderTree()
 Library.ThemeManager = ThemeManager
+end
+
+
+function Library:CreateSettingsTab(Window, Config)
+    Config = Config or {}
+    assert(Window and type(Window.AddTab) == 'function', 'CreateSettingsTab requires a window')
+
+    local SaveManager = self.SaveManager
+    local ThemeManager = self.ThemeManager
+    assert(SaveManager and ThemeManager, 'Settings managers are unavailable')
+
+    local Folder = Config.Folder or 'UIReborn'
+    SaveManager:SetLibrary(self)
+    ThemeManager:SetLibrary(self)
+    SaveManager:SetFolder(Folder)
+    ThemeManager:SetFolder(Folder)
+    SaveManager:SetIgnoreIndexes({
+        'UIReborn_ThemeList',
+        'UIReborn_ThemeName',
+        'UIReborn_ConfigName',
+        'UIReborn_ConfigList',
+        'UIReborn_ImportConfig',
+        'UIReborn_CommunityList'
+    })
+
+    local Settings = Window:AddTab(Config.Name or 'Settings')
+    local Menu = Settings:AddLeftGroupbox('Menu')
+    local Theme = Settings:AddLeftGroupbox('Theme')
+    local Background = Settings:AddRightGroupbox('Background')
+    local Configuration = Settings:AddRightGroupbox('Configuration')
+
+    Menu:AddLabel('Menu key'):AddKeyPicker('UIReborn_MenuKey', {
+        Default = Config.MenuKey or 'RightControl',
+        Mode = 'Toggle',
+        Text = 'Menu',
+        NoUI = true,
+        KeyboardOnly = true,
+        ChangedCallback = function()
+            self:SetToggleKeybind(self.Options.UIReborn_MenuKey)
+        end
+    })
+    self:SetToggleKeybind(self.Options.UIReborn_MenuKey)
+
+    Menu:AddSlider('UIReborn_MenuTransparency', {
+        Text = 'Menu transparency',
+        Default = 0,
+        Min = 0,
+        Max = 1,
+        Rounding = 1,
+        Callback = function(Value)
+            self.MenuTransparencyValue = math.clamp(Value, 0, 1)
+            for _, Item in ipairs(self.ScreenGui:GetDescendants()) do
+                if Item:IsA('Frame') or Item:IsA('ScrollingFrame') or Item:IsA('TextButton') then
+                    if Item:GetAttribute('UIRebornBaseTransparency') == nil then
+                        Item:SetAttribute('UIRebornBaseTransparency', Item.BackgroundTransparency)
+                    end
+                    local Base = Item:GetAttribute('UIRebornBaseTransparency')
+                    local BackgroundAlpha = Item:GetAttribute('UIRebornBackgroundAlpha') or 0
+                    Item.BackgroundTransparency = 1 - (1 - Base) * (1 - self.MenuTransparencyValue) * (1 - BackgroundAlpha)
+                end
+            end
+        end
+    })
+
+    Menu:AddDropdown('UIReborn_KeybindMenuMode', {
+        Text = 'Keybind menu mode',
+        Values = {'Active', 'Toggled', 'All'},
+        Default = 'All',
+        Callback = function(Value)
+            self.KeybindListMode = Value
+            for _, Option in pairs(self.Options) do
+                if Option.Type == 'KeyPicker' and Option.Update then Option:Update() end
+            end
+        end
+    })
+
+    local function RefreshThemes()
+        local Names = {}
+        for Name in pairs(ThemeManager.BuiltInThemes) do table.insert(Names, Name) end
+        for _, Name in ipairs(ThemeManager:RefreshCustomThemes()) do table.insert(Names, Name) end
+        table.sort(Names)
+        return Names
+    end
+
+    local ThemeFields = {
+        {'UIReborn_FontColor', 'Font color', 'FontColor'},
+        {'UIReborn_MainColor', 'Main color', 'MainColor'},
+        {'UIReborn_AccentColor', 'Accent color', 'AccentColor'},
+        {'UIReborn_BackgroundColor', 'Background color', 'BackgroundColor'},
+        {'UIReborn_OutlineColor', 'Outline color', 'OutlineColor'}
+    }
+
+    for _, Entry in ipairs(ThemeFields) do
+        local Id, Label, Field = Entry[1], Entry[2], Entry[3]
+        Theme:AddLabel(Label):AddColorPicker(Id, {
+            Default = self[Field],
+            Title = Label,
+            Callback = function(Color)
+                self[Field] = Color
+                ThemeManager:ThemeUpdate()
+            end
+        })
+    end
+
+    Theme:AddDropdown('UIReborn_ThemeList', {
+        Text = 'Theme list',
+        Values = RefreshThemes(),
+        Default = ThemeManager:GetDefault(),
+        Callback = function(Name)
+            if Name and not ThemeManager.Applying then
+                local Ok, Err = ThemeManager:ApplyTheme(Name)
+                if not Ok then self:Notify(tostring(Err), 3) end
+            end
+        end
+    })
+
+    Theme:AddInput('UIReborn_ThemeName', {
+        Text = 'Theme name',
+        Default = '',
+        Placeholder = 'New theme name'
+    })
+
+    local function RefreshThemeOptions()
+        self.Options.UIReborn_ThemeList:SetValues(RefreshThemes())
+    end
+
+    Theme:AddButton({Text = 'Save theme', Func = function()
+        local Ok, Err = ThemeManager:SaveCustomTheme(self.Options.UIReborn_ThemeName.Value)
+        self:Notify(Ok and 'Theme saved' or tostring(Err), 3)
+        RefreshThemeOptions()
+    end}):AddButton({Text = 'Set default', Func = function()
+        local Name = self.Options.UIReborn_ThemeList.Value
+        if not Name then return self:Notify('Select a theme', 2) end
+        local Ok, Err = ThemeManager:SaveDefault(Name)
+        self:Notify(Ok and ('Default theme: ' .. Name) or tostring(Err), 3)
+    end})
+
+    Theme:AddButton({Text = 'Refresh themes', Func = RefreshThemeOptions})
+
+    Background:AddSlider('UIReborn_BackgroundTransparency', {
+        Text = 'Transparency',
+        Default = 0,
+        Min = 0,
+        Max = 1,
+        Rounding = 1,
+        Callback = function(Value)
+            self.BackgroundTransparencyValue = math.clamp(Value, 0, 1)
+            for _, Item in ipairs(self.ScreenGui:GetDescendants()) do
+                if Item:IsA('Frame') or Item:IsA('ScrollingFrame') then
+                    local Registry = self.RegistryMap[Item]
+                    local IsBackground = Registry and Registry.Properties.BackgroundColor3 == 'BackgroundColor'
+                    if IsBackground then
+                        if Item:GetAttribute('UIRebornBaseTransparency') == nil then
+                            Item:SetAttribute('UIRebornBaseTransparency', Item.BackgroundTransparency)
+                        end
+                        local Base = Item:GetAttribute('UIRebornBaseTransparency')
+                        local MenuAlpha = self.MenuTransparencyValue or 0
+                        Item.BackgroundTransparency = 1 - (1 - Base) * (1 - MenuAlpha) * (1 - self.BackgroundTransparencyValue)
+                        Item:SetAttribute('UIRebornBackgroundAlpha', self.BackgroundTransparencyValue)
+                    end
+                end
+            end
+        end
+    })
+
+    local Lighting = game:GetService('Lighting')
+    local Blur = Lighting:FindFirstChild('UIRebornBlur') or Instance.new('BlurEffect')
+    Blur.Name = 'UIRebornBlur'
+    Blur.Parent = Lighting
+    local ColorEffect = Lighting:FindFirstChild('UIRebornColor') or Instance.new('ColorCorrectionEffect')
+    ColorEffect.Name = 'UIRebornColor'
+    ColorEffect.Parent = Lighting
+    self.SettingsEffects = {Blur, ColorEffect}
+
+    Background:AddSlider('UIReborn_BackgroundBlur', {
+        Text = 'Blur', Default = 0, Min = 0, Max = 50, Rounding = 0,
+        Callback = function(Value) Blur.Size = Value end
+    })
+    Background:AddSlider('UIReborn_BackgroundContrast', {
+        Text = 'Contrast', Default = 5, Min = 0, Max = 10, Rounding = 1,
+        Callback = function(Value) ColorEffect.Contrast = (Value - 5) / 5 end
+    })
+    Background:AddSlider('UIReborn_BackgroundSaturation', {
+        Text = 'Saturation', Default = 5, Min = 0, Max = 10, Rounding = 1,
+        Callback = function(Value) ColorEffect.Saturation = (Value - 5) / 5 end
+    })
+    Background:AddSlider('UIReborn_BackgroundBrightness', {
+        Text = 'Brightness', Default = 0.5, Min = 0, Max = 1, Rounding = 1,
+        Callback = function(Value) ColorEffect.Brightness = (Value - 0.5) * 2 end
+    })
+
+    local function NotifyResult(Ok, Err, Message)
+        self:Notify(Ok and Message or tostring(Err), 3)
+    end
+    local function RefreshConfigs()
+        self.Options.UIReborn_ConfigList:SetValues(SaveManager:RefreshConfigList())
+        self.Options.UIReborn_ConfigList:SetValue(nil)
+    end
+
+    Configuration:AddInput('UIReborn_ConfigName', {
+        Text = 'Config name', Default = '', Placeholder = 'Enter config name'
+    })
+    Configuration:AddDropdown('UIReborn_ConfigList', {
+        Text = 'Config list', Values = SaveManager:RefreshConfigList(), AllowNull = true
+    })
+    Configuration:AddButton({Text = 'Create config', Func = function()
+        local Ok, Err = SaveManager:Save(self.Options.UIReborn_ConfigName.Value)
+        NotifyResult(Ok, Err, 'Config created')
+        if Ok then RefreshConfigs() end
+    end}):AddButton({Text = 'Load config', Func = function()
+        local Ok, Err = SaveManager:Load(self.Options.UIReborn_ConfigList.Value)
+        NotifyResult(Ok, Err, 'Config loaded')
+    end})
+    Configuration:AddButton({Text = 'Overwrite config', Func = function()
+        local Ok, Err = SaveManager:Save(self.Options.UIReborn_ConfigList.Value)
+        NotifyResult(Ok, Err, 'Config overwritten')
+    end}):AddButton({Text = 'Delete config', Func = function()
+        local Ok, Err = SaveManager:Delete(self.Options.UIReborn_ConfigList.Value)
+        NotifyResult(Ok, Err, 'Config deleted')
+        if Ok then RefreshConfigs() end
+    end})
+    Configuration:AddButton({Text = 'Refresh list', Func = RefreshConfigs})
+
+    local AutoloadLabel = Configuration:AddLabel('Current autoload config: ' .. (SaveManager:GetAutoload() or 'none'), true)
+    Configuration:AddButton({Text = 'Set autoload', Func = function()
+        local Name = self.Options.UIReborn_ConfigList.Value
+        if not Name then return self:Notify('Select a config', 2) end
+        local Ok, Err = SaveManager:SetAutoload(Name)
+        if Ok then AutoloadLabel:SetText('Current autoload config: ' .. Name) end
+        NotifyResult(Ok, Err, 'Autoload config set')
+    end}):AddButton({Text = 'Remove autoload', Func = function()
+        local Ok, Err = SaveManager:RemoveAutoload()
+        if Ok then AutoloadLabel:SetText('Current autoload config: none') end
+        NotifyResult(Ok, Err, 'Autoload config removed')
+    end})
+
+    Configuration:AddDivider()
+    Configuration:AddInput('UIReborn_ImportConfig', {
+        Text = 'Paste config here', Default = '', Placeholder = 'Paste JSON configuration'
+    })
+    Configuration:AddButton({Text = 'Import pasted config', Func = function()
+        local Ok, Err = SaveManager:Import(self.Options.UIReborn_ImportConfig.Value)
+        NotifyResult(Ok, Err, 'Config imported')
+    end}):AddButton({Text = 'Copy config', Func = function()
+        local Ok, Err = SaveManager:CopyToClipboard()
+        NotifyResult(Ok, Err, 'Config copied to clipboard')
+    end})
+    Configuration:AddButton({Text = 'Import from clipboard', Func = function()
+        local Ok, Err = SaveManager:PasteFromClipboard()
+        NotifyResult(Ok, Err, 'Clipboard config imported')
+    end})
+    Configuration:AddDivider()
+    Configuration:AddDropdown('UIReborn_CommunityList', {
+        Text = 'Community configs', Values = SaveManager:RefreshCommunityList(), AllowNull = true
+    })
+    Configuration:AddButton({Text = 'Refresh community list', Func = function()
+        self.Options.UIReborn_CommunityList:SetValues(SaveManager:RefreshCommunityList())
+        self.Options.UIReborn_CommunityList:SetValue(nil)
+    end}):AddButton({Text = 'Load community config', Func = function()
+        local Ok, Err = SaveManager:LoadCommunity(self.Options.UIReborn_CommunityList.Value)
+        NotifyResult(Ok, Err, 'Community config loaded')
+    end})
+
+    local DefaultTheme = ThemeManager:GetDefault()
+    if DefaultTheme then ThemeManager:ApplyTheme(DefaultTheme) end
+    SaveManager:LoadAutoloadConfig()
+    return Settings
+end
+
+function Library:CreateFloatingControls()
+    local Parent = self.ScreenGui and self.ScreenGui.Parent
+    if not Parent then return nil end
+
+    local Existing = Parent:FindFirstChild('UIRebornControls')
+    if Existing then Existing:Destroy() end
+
+    local DockGui = Instance.new('ScreenGui')
+    DockGui.Name = 'UIRebornControls'
+    DockGui.IgnoreGuiInset = true
+    DockGui.ResetOnSpawn = false
+    DockGui.DisplayOrder = 10000
+    DockGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    pcall(ProtectGui, DockGui)
+    DockGui.Parent = Parent
+
+    local Dock = Instance.new('Frame')
+    Dock.Name = 'Controls'
+    Dock.AnchorPoint = Vector2.new(0.5, 1)
+    Dock.Position = UDim2.new(0.5, 0, 1, -18)
+    Dock.Size = UDim2.fromOffset(158, 62)
+    Dock.BackgroundColor3 = self.MainColor
+    Dock.BorderColor3 = self.AccentColor
+    Dock.Active = true
+    Dock.Parent = DockGui
+
+    local Drag = Instance.new('TextLabel')
+    Drag.Name = 'DragHandle'
+    Drag.BackgroundColor3 = self.BackgroundColor
+    Drag.BorderSizePixel = 0
+    Drag.Size = UDim2.new(1, 0, 0, 20)
+    Drag.Font = self.Font
+    Drag.TextSize = 10
+    Drag.TextColor3 = self.FontColor
+    Drag.Text = 'UI REBORN CONTROLS'
+    Drag.Parent = Dock
+
+    local Toggle = Instance.new('TextButton')
+    Toggle.Name = 'ToggleUI'
+    Toggle.Position = UDim2.fromOffset(4, 24)
+    Toggle.Size = UDim2.fromOffset(94, 34)
+    Toggle.BackgroundColor3 = self.BackgroundColor
+    Toggle.BorderColor3 = self.OutlineColor
+    Toggle.TextColor3 = self.FontColor
+    Toggle.Font = self.Font
+    Toggle.TextSize = 11
+    Toggle.Text = 'HIDE / SHOW'
+    Toggle.Parent = Dock
+
+    local Lock = Instance.new('TextButton')
+    Lock.Name = 'LockUI'
+    Lock.Position = UDim2.fromOffset(102, 24)
+    Lock.Size = UDim2.fromOffset(52, 34)
+    Lock.BackgroundColor3 = self.BackgroundColor
+    Lock.BorderColor3 = self.OutlineColor
+    Lock.TextColor3 = self.FontColor
+    Lock.Font = self.Font
+    Lock.TextSize = 10
+    Lock.Text = 'LOCK: OFF'
+    Lock.Parent = Dock
+
+    Toggle.Activated:Connect(function() self:Toggle() end)
+    Lock.Activated:Connect(function()
+        local Locked = self:ToggleLock()
+        Lock.Text = Locked and 'LOCK: ON' or 'LOCK: OFF'
+        Drag.Text = Locked and 'UI REBORN CONTROLS | LOCKED' or 'UI REBORN CONTROLS'
+    end)
+
+    local Input = game:GetService('UserInputService')
+    local Dragging = false
+    local StartPoint, StartPosition, TouchId
+    Drag.InputBegan:Connect(function(Began)
+        local IsTouch = Began.UserInputType == Enum.UserInputType.Touch
+        if Began.UserInputType ~= Enum.UserInputType.MouseButton1 and not IsTouch then return end
+        if self.Locked then return end
+        Dragging = true
+        TouchId = IsTouch and Began.TouchId or nil
+        StartPoint = IsTouch and Vector2.new(Began.Position.X, Began.Position.Y) or Vector2.new(Input:GetMouseLocation().X, Input:GetMouseLocation().Y)
+        StartPosition = Dock.AbsolutePosition
+    end)
+    self:GiveSignal(Input.InputChanged:Connect(function(Moved)
+        if not Dragging then return end
+        local Point
+        if TouchId and Moved.UserInputType == Enum.UserInputType.Touch and Moved.TouchId == TouchId then
+            Point = Vector2.new(Moved.Position.X, Moved.Position.Y)
+        elseif not TouchId and Moved.UserInputType == Enum.UserInputType.MouseMovement and Input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            local MousePoint = Input:GetMouseLocation()
+            Point = Vector2.new(MousePoint.X, MousePoint.Y)
+        end
+        if not Point then return end
+        local Camera = workspace.CurrentCamera
+        local Viewport = Camera and Camera.ViewportSize or Vector2.new(800, 600)
+        local X = math.clamp(StartPosition.X + Point.X - StartPoint.X, 4, math.max(4, Viewport.X - Dock.AbsoluteSize.X - 4))
+        local Y = math.clamp(StartPosition.Y + Point.Y - StartPoint.Y, 4, math.max(4, Viewport.Y - Dock.AbsoluteSize.Y - 4))
+        Dock.Position = UDim2.fromOffset(X + Dock.AbsoluteSize.X * 0.5, Y + Dock.AbsoluteSize.Y)
+    end))
+    self:GiveSignal(Input.InputEnded:Connect(function(Ended)
+        if TouchId and Ended.UserInputType == Enum.UserInputType.Touch and Ended.TouchId == TouchId then
+            Dragging = false
+            TouchId = nil
+        elseif not TouchId and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = false
+        end
+    end))
+
+    self.FloatingControls = DockGui
+    return DockGui
 end
 
 Environment.Library = Library
