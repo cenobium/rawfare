@@ -315,3 +315,88 @@ The repository currently contains the core library, showcase, and this documenta
 The public function inventory in this repository's core `UIReborn.lua` was compared against LinoriaLib's upstream `Library.lua`. All upstream core function names were present in the local library at the time of this audit. UI Reborn additionally exposes `Library:SetLocked` and `Library:ToggleLock`, plus its mobile color-picker positioning/input helpers. This is a name-level parity check, not a claim that every internal behavior is identical.
 
 Upstream reference: https://github.com/violin-suzutsuki/LinoriaLib
+
+
+## Settings, ThemeManager and SaveManager
+
+The showcase loads two companion managers from `addons/`:
+
+- `addons/SaveManager.lua` - JSON config serialization, local save/load/delete, refresh, autoload, clipboard import/export, and community config loading.
+- `addons/ThemeManager.lua` - built-in themes, custom theme save/load, theme defaults, and live registry refresh.
+
+Both managers are initialized with `SetLibrary(Library)` and share the library's `Toggles` and `Options` registries. The default storage folder is `UIReborn`.
+
+### Settings tab
+
+The Settings tab is organized into two columns.
+
+**Left column - Menu**
+- Menu key picker (defaults to RightControl).
+- Menu transparency slider from 0.0 to 1.0 in 0.1 increments.
+- Keybind menu mode: Active, Toggled, or All.
+
+**Left column - Theme / Background tabbox**
+- Theme colors: font, main, accent, background, outline.
+- Built-in and locally saved custom theme list.
+- Save custom theme and set default theme.
+- Blur: 0-50.
+- Contrast and saturation: 0-10, mapped to Roblox ColorCorrectionEffect's -1 to 1 range.
+- Brightness: 0.0-1.0, mapped to Roblox ColorCorrectionEffect's -1 to 1 range.
+
+**Right column - Configuration**
+- Config name and local config list.
+- Create, load, overwrite, delete, and refresh.
+- Set and remove autoload, with the active name displayed.
+- Paste JSON into the import field and import it.
+- Copy current config to clipboard and paste clipboard content into the import field.
+- Community config list and load action.
+
+### Config file format and executor requirements
+
+Local config files are JSON under `UIReborn/settings/`; themes are stored under `UIReborn/themes/`. Local persistence requires executor functions such as `makefolder`, `isfolder`, `writefile`, `readfile`, `isfile`, `listfiles`, and `delfile`. Clipboard actions require `setclipboard` / `toclipboard` and optionally `getclipboard` / `readclipboard`. Unsupported functions are reported instead of silently claiming success.
+
+### Community configs
+
+The community dropdown reads `community-configs/index.json` from this repository. The registry is intentionally empty until community submissions are reviewed. Add entries in this format:
+
+```json
+[
+  {
+    "name": "Example config",
+    "url": "https://raw.githubusercontent.com/OWNER/REPO/BRANCH/config.json"
+  }
+]
+```
+
+Each remote file must use the same JSON structure produced by SaveManager's `Export()` method. Only add configs that are safe to load and have been reviewed. A community config can change any matching registered toggle or option in the current script.
+
+### Manager API
+
+```lua
+SaveManager:SetLibrary(Library)
+SaveManager:SetFolder("UIReborn")
+SaveManager:SetIgnoreIndexes({"OptionId"})
+SaveManager:Save("config-name")
+SaveManager:Load("config-name")
+SaveManager:Delete("config-name")
+SaveManager:RefreshConfigList()
+SaveManager:SetAutoload("config-name")
+SaveManager:RemoveAutoload()
+SaveManager:LoadAutoloadConfig()
+SaveManager:Export()
+SaveManager:Import(jsonString)
+SaveManager:CopyToClipboard()
+SaveManager:PasteFromClipboard()
+SaveManager:RefreshCommunityList()
+SaveManager:LoadCommunity("Community config")
+
+ThemeManager:SetLibrary(Library)
+ThemeManager:SetFolder("UIReborn")
+ThemeManager:ApplyTheme("Midnight")
+ThemeManager:SaveCustomTheme("My theme")
+ThemeManager:RefreshCustomThemes()
+ThemeManager:SaveDefault("My theme")
+ThemeManager:GetDefault()
+```
+
+The manager modules are companion modules; the core `UIReborn.lua` remains independently loadable. The showcase fetches the manager modules before building Settings.
