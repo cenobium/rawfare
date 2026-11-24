@@ -330,7 +330,7 @@ The Settings tab is organized into two columns.
 - Menu transparency slider from 0.0 to 1.0 in 0.1 increments.
 - Keybind menu mode: Active, Toggled, or All.
 
-**Left column - Theme / Background tabbox**
+**Left column - Theme**
 - Theme colors: font, main, accent, background, outline.
 - Built-in and locally saved custom theme list.
 - Save custom theme and set default theme.
@@ -338,7 +338,7 @@ The Settings tab is organized into two columns.
 - Contrast and saturation: 0-10, mapped to Roblox ColorCorrectionEffect's -1 to 1 range.
 - Brightness: 0.0-1.0, mapped to Roblox ColorCorrectionEffect's -1 to 1 range.
 
-**Right column - Configuration**
+**Right column - Background and Configuration**
 - Config name and local config list.
 - Create, load, overwrite, delete, and refresh.
 - Set and remove autoload, with the active name displayed.
