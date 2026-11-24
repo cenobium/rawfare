@@ -499,6 +499,12 @@ local function makeGroupbox(tab, name, side)
             Parent = library.ScreenGui,
         })
         register(library, popup, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
+        local outsideEvent = Instance.new("BindableEvent")
+        local outsideConnection = library.UserInputService.InputBegan:Connect(function(input)
+            if popup.Visible then
+                outsideEvent:Fire(input)
+            end
+        end)
         local values = config.Values or {}
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Dropdown", "Dropdown", config.Multi and {} or config.Default or values[1], config.Callback or callback)
         option.Values = values
@@ -535,13 +541,15 @@ local function makeGroupbox(tab, name, side)
             [11] = valueLabel,
             [12] = option.Flag,
             [13] = {popup},
-            [14] = {InputBegan = library.UserInputService.InputBegan},
+            [14] = {InputBegan = outsideEvent.Event},
             [15] = captureSlot("Frame", "Frame"),
         })
         initialize()
         local nativeRemove = option.Remove
         function option:Remove()
             nativeRemove(self)
+            outsideConnection:Disconnect()
+            outsideEvent:Destroy()
             if row.Parent then
                 row:Destroy()
             end
