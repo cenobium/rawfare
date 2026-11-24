@@ -1051,11 +1051,14 @@ do
                 local AbsPos, AbsSize = PickerFrameOuter.AbsolutePosition, PickerFrameOuter.AbsoluteSize;
 
                 local Pointer = GetColorInputPosition(Input)
-                if Pointer.X < AbsPos.X or Pointer.X > AbsPos.X + AbsSize.X
-                    or Pointer.Y < (AbsPos.Y - 20 - 1) or Pointer.Y > AbsPos.Y + AbsSize.Y then
-
-                    ColorPicker:Hide();
-                end;
+                local OnColorSwatch = Pointer.X >= DisplayFrame.AbsolutePosition.X
+                    and Pointer.X <= DisplayFrame.AbsolutePosition.X + DisplayFrame.AbsoluteSize.X
+                    and Pointer.Y >= DisplayFrame.AbsolutePosition.Y
+                    and Pointer.Y <= DisplayFrame.AbsolutePosition.Y + DisplayFrame.AbsoluteSize.Y
+                if not OnColorSwatch and (Pointer.X < AbsPos.X or Pointer.X > AbsPos.X + AbsSize.X
+                    or Pointer.Y < (AbsPos.Y - 20 - 1) or Pointer.Y > AbsPos.Y + AbsSize.Y) then
+                    ColorPicker:Hide()
+                end
 
                 if not Library:IsMouseOverFrame(ContextMenu.Container) then
                     ContextMenu:Hide()
@@ -2138,6 +2141,7 @@ do
         end;
 
         function Slider:Display()
+            Slider.MaxSize = math.max(1, SliderInner.AbsoluteSize.X)
             local Suffix = Info.Suffix or '';
 
             if Info.Compact then
@@ -2189,31 +2193,49 @@ do
         end;
 
         SliderInner.InputBegan:Connect(function(Input)
-            if (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch) and not Library:MouseIsOverOpenedFrame() then
-                local mPos = Mouse.X;
-                local gPos = Fill.Size.X.Offset;
-                local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
+            if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and Input.UserInputType ~= Enum.UserInputType.Touch then
+                return
+            end
+            if Library:MouseIsOverOpenedFrame() then
+                return
+            end
 
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or (Input.UserInputType == Enum.UserInputType.Touch and Input.UserInputState ~= Enum.UserInputState.End) do
-                    local nMPos = Mouse.X;
-                    local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
+            local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
+            local StartX = IsTouch and Input.Position.X or Mouse.X
+            local StartFill = Fill.AbsoluteSize.X
+            local StartPointerOffset = StartX - Fill.AbsolutePosition.X
+            local Dragging = true
+            local EndConnection
+            if IsTouch then
+                EndConnection = Input.Changed:Connect(function()
+                    if Input.UserInputState == Enum.UserInputState.End or Input.UserInputState == Enum.UserInputState.Cancel then
+                        Dragging = false
+                    end
+                end)
+            end
 
-                    local nValue = Slider:GetValueFromXOffset(nX);
-                    local OldValue = Slider.Value;
-                    Slider.Value = nValue;
+            repeat
+                Slider.MaxSize = math.max(1, SliderInner.AbsoluteSize.X)
+                local PointerX = IsTouch and Input.Position.X or Mouse.X
+                local RelativeX = PointerX - SliderInner.AbsolutePosition.X
+                local nX = math.clamp(RelativeX, 0, Slider.MaxSize)
+                local nValue = Slider:GetValueFromXOffset(nX)
+                local OldValue = Slider.Value
+                Slider.Value = nValue
+                Slider:Display()
 
-                    Slider:Display();
+                if nValue ~= OldValue then
+                    Library:SafeCallback(Slider.Callback, Slider.Value)
+                    Library:SafeCallback(Slider.Changed, Slider.Value)
+                end
 
-                    if nValue ~= OldValue then
-                        Library:SafeCallback(Slider.Callback, Slider.Value);
-                        Library:SafeCallback(Slider.Changed, Slider.Value);
-                    end;
+                RenderStepped:Wait()
+            until (IsTouch and not Dragging) or (not IsTouch and not InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1))
 
-                    RenderStepped:Wait();
-                end;
-
-                Library:AttemptSave();
-            end;
+            if EndConnection then
+                EndConnection:Disconnect()
+            end
+            Library:AttemptSave()
         end);
 
         Slider:Display();
@@ -3689,26 +3711,7 @@ function Library:CreateWindow(...)
         end
     end))
 
-    local TouchCount = 0
-    local TouchLatched = false
-    Library:GiveSignal(InputService.InputBegan:Connect(function(Input)
-        if Input.UserInputType ~= Enum.UserInputType.Touch then
-            return
-        end
-        TouchCount = TouchCount + 1
-        if TouchCount >= 2 and not TouchLatched then
-            TouchLatched = true
-            task.spawn(Library.Toggle)
-        end
-    end))
-    Library:GiveSignal(InputService.InputEnded:Connect(function(Input)
-        if Input.UserInputType == Enum.UserInputType.Touch then
-            TouchCount = math.max(0, TouchCount - 1)
-            if TouchCount == 0 then
-                TouchLatched = false
-            end
-        end
-    end))
+    Library.MobileGestureToggle = false
 
     if Config.AutoShow then task.spawn(Library.Toggle) end
 
