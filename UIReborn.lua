@@ -3866,7 +3866,6 @@ function SaveManager:SetFolder(folder)
 end
 
 function SaveManager:SetIgnoreIndexes(indexes)
-    self.Ignore = {}
     for _, index in ipairs(indexes) do self.Ignore[index] = true end
 end
 
