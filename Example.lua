@@ -8,13 +8,18 @@ Library.AccentColor = Color3.fromRGB(145, 190, 255)
 Library.OutlineColor = Color3.fromRGB(38, 38, 38)
 Library:UpdateColorsUsingRegistry()
 
+local Camera = workspace.CurrentCamera
+local Viewport = Camera and Camera.ViewportSize or Vector2.new(900, 600)
+local WindowWidth = math.min(900, Viewport.X - 32)
+local WindowHeight = math.min(460, Viewport.Y - 48)
+
 local Window = Library:CreateWindow({
     Title = "UI Reborn",
     Center = true,
     AutoShow = true,
     TabPadding = 5,
     MenuFadeTime = 0.15,
-    Size = UDim2.fromOffset(560, 300)
+    Size = UDim2.fromOffset(WindowWidth, WindowHeight)
 })
 
 local Tabs = {
@@ -64,6 +69,19 @@ Right:AddInput("DemoInput", {
     Default = "",
     Placeholder = "Type here",
     Finished = false
+})
+Right:AddButton({
+    Text = "Toggle UI",
+    Func = function()
+        Library:Toggle()
+    end
+})
+Right:AddButton({
+    Text = "Lock / Unlock UI",
+    Func = function()
+        local locked = Library:ToggleLock()
+        Library:Notify(locked and "UI position locked" or "UI position unlocked", 2)
+    end
 })
 
 local Settings = Tabs.Settings:AddLeftGroupbox("Interface")
