@@ -538,6 +538,7 @@ do
             BorderColor3 = Library:GetDarkerColor(ColorPicker.Value);
             BorderMode = Enum.BorderMode.Inset;
             Size = UDim2.new(0, 28, 0, 14);
+            Active = true;
             ZIndex = 6;
             Parent = ToggleLabel;
         });
