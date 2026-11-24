@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124b957"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124mobilefix"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
@@ -136,9 +136,9 @@ LockButton.Activated:Connect(function()
     LockButton.Text = locked and "LOCK: ON" or "LOCK: OFF"
 end)
 
-Library:GiveSignal(DockGui.Destroying:Connect(function()
-    if Library.ScreenGui and Library.ScreenGui.Parent then
-        Library.ScreenGui:Destroy()
+Library:OnUnload(function()
+    if DockGui and DockGui.Parent then
+        DockGui:Destroy()
     end
-end))
+end)
 
