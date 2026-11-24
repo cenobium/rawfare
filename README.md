@@ -32,4 +32,4 @@ Group:AddButton({Text = "Click me", Func = function() Library:Notify("Hello", 2)
 
 See [the documentation](docs/README.md) for controls and layout examples.
 
-The example includes persistent on-screen Toggle UI and Lock UI controls outside the main window. The color picker uses touch coordinates on mobile and opens centered with a visible drag handle. The library has not yet been runtime-tested in Delta on iOS.
+The showcase includes persistent on-screen Toggle UI and Lock UI controls outside the main window. The floating controls are draggable and share the window lock state. The color picker supports touch input and can be dragged. The two-finger restore gesture is disabled to prevent accidental reopening during gameplay.
