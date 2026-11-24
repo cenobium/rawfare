@@ -18,7 +18,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main
 ## Load the library in your own script
 
 ```lua
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua?v=foundation-20261124-3"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua?v=global-touch-input-20261124"))()
 local Window = Library:CreateWindow({
     Title = "My UI",
     Center = true,
@@ -32,4 +32,4 @@ Group:AddButton({Text = "Click me", Func = function() Library:Notify("Hello", 2)
 
 See [the documentation](docs/README.md) for controls and layout examples.
 
-The core library bundles `Library.SaveManager` and `Library.ThemeManager`. Use `Library:CreateSettingsTab(Window, {Folder = "MyScript"})` to add the complete reusable Settings tab with menu key synchronization, theme colors and presets, background effects, config management, clipboard import/export, autoload, and community config loading. `Library:CreateWindow()` automatically adds the floating HIDE / SHOW and LOCK controls outside the main window. The color picker supports mouse and touch dragging using dedicated touch-move tracking. Background blur and color correction start neutral at execution. Local config persistence requires executor file APIs; clipboard actions require clipboard APIs. The community config registry starts empty until reviewed entries are added.
+The core library bundles `Library.SaveManager` and `Library.ThemeManager`. Use `Library:CreateSettingsTab(Window, {Folder = "MyScript"})` to add the complete reusable Settings tab with menu key synchronization, theme colors and presets, background effects, config management, clipboard import/export, autoload, and community config loading. `Library:CreateWindow()` automatically adds the floating HIDE / SHOW and LOCK controls outside the main window. The color picker and floating controls use global screen-coordinate input handling for touch and mouse. Blur has been removed completely, including its Settings slider and Lighting effect; color correction remains separate. Local config persistence requires executor file APIs; clipboard actions require clipboard APIs. The community config registry starts empty until reviewed entries are added.
