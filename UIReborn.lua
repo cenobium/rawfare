@@ -13,6 +13,11 @@ local Mouse = LocalPlayer:GetMouse();
 
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
+local ExistingGui = GuiParent:FindFirstChild('UIReborn')
+if ExistingGui then
+    ExistingGui:Destroy()
+end
+
 local ScreenGui = Instance.new('ScreenGui');
 ScreenGui.Name = 'UIReborn';
 pcall(ProtectGui, ScreenGui);
