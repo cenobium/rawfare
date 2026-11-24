@@ -176,8 +176,17 @@ local function makeLibrary(Native)
     assert(type(extend) == "function", "Native.library did not return its extension")
     extend()
     library.Captures = captures
+    library.Native = Native
+    library:ApplyLayout = nil
     library.CaptureState = state
     library:CreateEvent("VisibilityChanged")
+    function library:ApplyLayout()
+        for index, tab in ipairs(self.TabOrder or {}) do
+            if tab.Button then
+                tab.Button.LayoutOrder = index
+            end
+        end
+    end
     library.NotificationArea = library:Create("Frame", {
         Name = "Notifications",
         BackgroundTransparency = 1,
@@ -211,16 +220,11 @@ local function makeLibrary(Native)
         BackgroundColor3 = "MainColor",
         BorderColor3 = "OutlineColor",
     })
-    library:OnUnload(function()
-        if library.ScreenGui then
-            library.ScreenGui:Destroy()
-        end
-    end)
     local themeManager = {}
     local themeSetup = Native.themes({
         [0] = library.Options,
         [1] = themeManager,
-        [2] = makeSlot("OutlineColor", nil),
+        [2] = makeSlot("OutlineColor", "OutlineColor"),
     })
     themeSetup()
     themeManager:SetLibrary(library)
@@ -238,7 +242,7 @@ local function makeLibrary(Native)
         [0] = configManager,
         [1] = library.Options,
         [2] = library.Toggles,
-        [3] = makeSlot("OutlineColor", nil),
+        [3] = makeSlot("OutlineColor", "OutlineColor"),
     })
     configSetup()
     configManager:SetLibrary(library)
