@@ -884,6 +884,46 @@ do
             Func(ColorPicker.Value)
         end;
 
+        local PickerDrag = Library:Create('TextButton', {
+            Name = 'ColorPickerDrag',
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Text = '',
+            AutoButtonColor = false,
+            Position = UDim2.fromOffset(0, 0),
+            Size = UDim2.new(1, 0, 0, 22),
+            ZIndex = 30,
+            Parent = PickerFrameOuter
+        })
+
+        PickerDrag.InputBegan:Connect(function(Input)
+            local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
+            if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and not IsTouch then
+                return
+            end
+            local Start = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
+            local Origin = PickerFrameOuter.Position
+            while (IsTouch and Input.UserInputState ~= Enum.UserInputState.End) or (not IsTouch and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) do
+                local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Mouse.X, Mouse.Y)
+                local Viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
+                local Size = PickerFrameOuter.AbsoluteSize
+                local X = math.clamp(Origin.X.Offset + Point.X - Start.X, 4, math.max(4, Viewport.X - Size.X - 4))
+                local Y = math.clamp(Origin.Y.Offset + Point.Y - Start.Y, 4, math.max(4, Viewport.Y - Size.Y - 4))
+                PickerFrameOuter.Position = UDim2.fromOffset(X, Y)
+                RenderStepped:Wait()
+            end
+        end)
+
+        local function PositionColorPicker()
+            local Viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
+            local Size = PickerFrameOuter.AbsoluteSize
+            local Anchor = DisplayFrame.AbsolutePosition
+            local X = math.clamp(Anchor.X, 4, math.max(4, Viewport.X - Size.X - 4))
+            local Y = Anchor.Y + Size.Y + 18 <= Viewport.Y and Anchor.Y + 18 or Anchor.Y - Size.Y - 4
+            Y = math.clamp(Y, 4, math.max(4, Viewport.Y - Size.Y - 4))
+            PickerFrameOuter.Position = UDim2.fromOffset(X, Y)
+        end
+
         function ColorPicker:Show()
             for Frame, Val in next, Library.OpenedFrames do
                 if Frame.Name == 'Color' then
@@ -893,6 +933,7 @@ do
             end;
 
             PickerFrameOuter.Visible = true;
+            PositionColorPicker()
             Library.OpenedFrames[PickerFrameOuter] = true;
         end;
 
