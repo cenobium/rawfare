@@ -384,6 +384,7 @@ local function makeGroupbox(tab, name, side)
         })
         local values = config.Values or {}
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Dropdown", "Dropdown", config.Default or values[1], config.Callback or callback)
+        option.Multi = config.Multi == true
         local picker = button(library, row, tostring(option.Value or "Select"), UDim2.new(0.56, 0, 1, 0), UDim2.new(0.44, 0, 0, 0))
         local popup = create(library, "Frame", {
             BackgroundColor3 = library.MainColor,
@@ -484,6 +485,7 @@ local function makeGroupbox(tab, name, side)
         })
         register(library, swatch, {BorderColor3 = "OutlineColor"})
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Color", "ColorPicker", config.Default or Color3.new(1, 1, 1), config.Callback or callback)
+        option.Transparency = tonumber(config.Transparency) or 0
         local palette = {
             Color3.fromRGB(255, 255, 255),
             Color3.fromRGB(162, 205, 255),
@@ -527,7 +529,8 @@ local function makeGroupbox(tab, name, side)
             invoke(library, self.Changed, color)
             return self
         end
-        function option:SetValueRGB(color)
+        function option:SetValueRGB(color, transparency)
+            self.Transparency = tonumber(transparency) or self.Transparency or 0
             return self:SetValue(color)
         end
         swatch.MouseButton1Click:Connect(function()
@@ -558,6 +561,19 @@ local function makeGroupbox(tab, name, side)
         })
         local keyButton = button(library, row, tostring(config.Default and config.Default.Name or "None"), UDim2.fromOffset(76, 20), UDim2.new(1, -76, 0, 1))
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "KeyPicker", "KeyPicker", config.Default or Enum.KeyCode.Unknown, config.Callback or callback)
+        option.Mode = config.Mode or "Toggle"
+        function option:SetValue(nextValue)
+            if type(nextValue) == "table" then
+                self.Value = nextValue[1] or Enum.KeyCode.Unknown
+                self.Mode = nextValue[2] or self.Mode
+            else
+                self.Value = nextValue or Enum.KeyCode.Unknown
+            end
+            keyButton.Text = tostring(self.Value.Name or self.Value)
+            invoke(library, self.Callback, self.Value, self.Mode)
+            invoke(library, self.Changed, self.Value, self.Mode)
+            return self
+        end
         local listening = false
         keyButton.MouseButton1Click:Connect(function()
             listening = true
