@@ -594,7 +594,14 @@ local function makeGroupbox(tab, name, side)
         register(library, popup, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
         local outsideEvent = Instance.new("BindableEvent")
         local outsideConnection = library.UserInputService.InputBegan:Connect(function(input)
-            if popup.Visible then
+            if not popup.Visible then
+                return
+            end
+            local mouseX, mouseY = library.Mouse.X, library.Mouse.Y
+            local position, size = anchor.AbsolutePosition, anchor.AbsoluteSize
+            local insideAnchor = mouseX >= position.X and mouseX <= position.X + size.X
+                and mouseY >= position.Y and mouseY <= position.Y + size.Y
+            if not insideAnchor then
                 outsideEvent:Fire(input)
             end
         end)
