@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124touchslider4"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124api-docs"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
@@ -77,7 +77,7 @@ Right:AddInput("DemoInput", {
 local Settings = Tabs.Settings:AddLeftGroupbox("Interface")
 Settings:AddLabel("Use the floating screen controls.")
 Settings:AddLabel("RightControl also toggles the window.")
-Settings:AddLabel("Two-finger touch is supported.")
+Settings:AddLabel("Use the floating HIDE / SHOW control on mobile.")
 Settings:AddButton({
     Text = "Unload library",
     Func = function()
