@@ -273,95 +273,55 @@ local function makeGroupbox(tab, name, side)
     end
     function groupbox:AddButtonGroup(config)
         config = config or {}
-        local row = addRow(20)
-        local outer = create(library, "Frame", {
-            BackgroundColor3 = library.MainColor,
-            BorderColor3 = library.OutlineColor,
-            BorderSizePixel = 1,
-            Size = UDim2.new(1, -2, 1, 0),
+        local row = addRow(22)
+        local container = create(library, "Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
             Parent = row,
         })
-        local inner = create(library, "Frame", {
-            BackgroundColor3 = library.BackgroundColor,
-            BorderColor3 = library.OutlineColor,
-            BorderSizePixel = 1,
-            Size = UDim2.new(1, -4, 1, -4),
-            Position = UDim2.fromOffset(2, 2),
-            Parent = outer,
+        create(library, "UIListLayout", {
+            FillDirection = Enum.FillDirection.Horizontal,
+            HorizontalAlignment = Enum.HorizontalAlignment.Left,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 4),
+            Parent = container,
         })
-        register(library, outer, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
-        register(library, inner, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor"})
-        local buttonGroup = {
-            Outer = outer,
-            Inner = inner,
-            Tooltip = config.Tooltip,
+        local group = {
+            Outer = row,
+            Inner = container,
+            Buttons = {},
         }
-        function buttonGroup:AddTooltip(value)
+        function group:AddTooltip(value)
             if type(value) == "string" then
                 library:AddToolTip(value, self.Outer)
             end
             return self
         end
-        local function createButton(configValue)
-            local buttonOuter = create(library, "Frame", {
-                BackgroundColor3 = library.MainColor,
-                BorderColor3 = library.OutlineColor,
-                BorderSizePixel = 1,
-                Parent = outer,
-            })
-            local buttonInner = create(library, "Frame", {
-                BackgroundColor3 = library.BackgroundColor,
-                BorderColor3 = library.OutlineColor,
-                BorderSizePixel = 1,
-                Position = UDim2.fromOffset(1, 1),
-                Size = UDim2.new(1, -2, 1, -2),
-                Parent = buttonOuter,
-            })
-            local label = library:CreateLabel({
-                Active = true,
-                BackgroundTransparency = 1,
-                Size = UDim2.fromScale(1, 1),
-                Text = configValue.Text or "Button",
-                TextColor3 = library.FontColor,
-                TextSize = 13,
-                Parent = buttonInner,
-            })
-            register(library, buttonOuter, {BackgroundColor3 = "MainColor", BorderColor3 = "OutlineColor"})
-            register(library, buttonInner, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor"})
-            return buttonOuter, buttonInner, label
-        end
-        local function bindButton(configValue)
-            configValue.Label.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    invoke(library, configValue.Func)
-                end
+        function group:AddButton(value, callback)
+            local buttonConfig = type(value) == "table" and value or {Text = value, Func = callback}
+            local action = button(library, container, buttonConfig.Text or "Button", UDim2.new(1, 0, 1, 0))
+            action.LayoutOrder = #self.Buttons + 1
+            action.MouseButton1Click:Connect(function()
+                invoke(library, buttonConfig.Func or buttonConfig.Callback)
             end)
-            library:OnHighlight(configValue.Label, configValue.Label, {
-                TextColor3 = "AccentColor",
-                BorderColor3 = "AccentColor",
-            }, {
-                TextColor3 = "FontColor",
-                BorderColor3 = "OutlineColor",
-            })
-        end
-        local initialize = library.Native.buttons({
-            [0] = bindButton,
-            [1] = buttonGroup,
-            [2] = groupbox,
-            [3] = createButton,
-            [4] = library,
-        })
-        initialize()
-        local nativeRemove = buttonGroup.Remove
-        function buttonGroup:Remove()
-            nativeRemove(self)
-            if row.Parent then
-                row:Destroy()
+            table.insert(self.Buttons, action)
+            local width = 1 / #self.Buttons
+            for index, item in ipairs(self.Buttons) do
+                item.Size = UDim2.new(width, -4, 1, 0)
+                item.LayoutOrder = index
             end
             groupbox:Resize()
+            return action
+        end
+        function group:Remove()
+            row:Destroy()
+            groupbox:Resize()
+        end
+        if type(config.Tooltip) == "string" then
+            group:AddTooltip(config.Tooltip)
         end
         self:Resize()
-        return buttonGroup
+        return group
     end
     function groupbox:AddToggle(value, callback)
         local config = type(value) == "table" and value or {Text = value, Default = false, Callback = callback}
