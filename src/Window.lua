@@ -51,13 +51,23 @@ function Window.new(options)
     self.Connections = {}
 
     local player = Players.LocalPlayer
-    local playerGui = player:WaitForChild("PlayerGui")
+    local guiParent
+    if type(gethui) == "function" then
+        local ok, result = pcall(gethui)
+        if ok and result then
+            guiParent = result
+        end
+    end
+    if not guiParent then
+        guiParent = player:WaitForChild("PlayerGui")
+    end
     local screen = make("ScreenGui", {
         Name = "RawfareUI",
         ResetOnSpawn = false,
         IgnoreGuiInset = true,
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    }, playerGui)
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+        DisplayOrder = 999
+    }, guiParent)
     self.Screen = screen
 
     local root = make("Frame", {
