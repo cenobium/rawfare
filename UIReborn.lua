@@ -2238,6 +2238,10 @@ do
             Library:AttemptSave()
         end);
 
+        SliderInner:GetPropertyChangedSignal('AbsoluteSize'):Connect(function()
+            Slider:Display()
+        end)
+
         Slider:Display();
         Groupbox:AddBlank(Info.BlankSize or 6);
         Groupbox:Resize();
