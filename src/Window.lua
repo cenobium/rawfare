@@ -865,6 +865,13 @@ local function makeGroupbox(tab, name, side)
             [9] = borderSlot,
         })
         initialize()
+        local originalRemoveTabbox = tabContainer.Remove
+        function tabContainer:Remove()
+            originalRemoveTabbox(self)
+            groupbox.Tabbox = nil
+            groupbox:Resize()
+        end
+        groupbox.Tabbox = tabContainer
         local originalAddTab = tabContainer.AddTab
         function tabContainer:AddTab(label, selected)
             local panel = originalAddTab(self, label, selected)
@@ -902,6 +909,9 @@ local function makeGroupbox(tab, name, side)
         return tabContainer
     end
     function groupbox:Remove()
+        if self.Tabbox and self.Tabbox.Remove then
+            self.Tabbox:Remove()
+        end
         outer:Destroy()
         self:Resize()
     end
@@ -1193,6 +1203,24 @@ function Window.attach(library, settings)
             }
             local initializeTab = nativeTab(nativeCaptures)
             initializeTab()
+            local nativeRemove = tab.Remove
+            function tab:Remove()
+                local wasActive = library.ActiveTab == name
+                local index = table.find(window.Tabs, self)
+                nativeRemove(self)
+                if page.Parent then
+                    page:Destroy()
+                end
+                if index then
+                    table.remove(window.Tabs, index)
+                end
+                library.TabOrder = window.Tabs
+                library.TotalTabs = #window.Tabs
+                library:ApplyLayout()
+                if wasActive and #window.Tabs > 0 then
+                    window.Tabs[math.clamp(index or 1, 1, #window.Tabs)]:ShowTab()
+                end
+            end
         end
         tabButton.MouseButton1Click:Connect(function()
             tab:ShowTab()
