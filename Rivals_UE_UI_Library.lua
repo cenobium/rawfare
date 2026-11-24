@@ -61,7 +61,7 @@ end
 local Assets = {}
 
 Assets.Folder = 'RivalsUE_Assets'       -- executor workspace folder used by install()
-Assets.Source = 'RivalsUE/assets'       -- where readfile() looks for shipped files
+Assets.Source = 'assets'       -- where readfile() looks for shipped files
 
 Assets.Fonts = {
     Title    = 'BurbankBigCondensed-Black.otf',
