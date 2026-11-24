@@ -67,7 +67,6 @@ Main:AddMultiDropdown("DemoTargetParts", {
         "Torso"
     },
     Default = {"Head", "Right Hand"},
-    MaxSelections = 3,
     Callback = function(values)
         local selected = {}
         for name, enabled in pairs(values) do
