@@ -12,13 +12,13 @@ A compact Roblox Luau UI library based on the LinoriaLib architecture.
 ## Run the showcase
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/Example.lua?update=20261124b957"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/Example.lua?update=unlimited-multi-20261124"))()
 ```
 
 ## Load the library in your own script
 
 ```lua
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/UIReborn.lua?v=unlimited-multi-20261124"))()
 local Window = Library:CreateWindow({
     Title = "My UI",
     Center = true,
