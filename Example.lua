@@ -56,6 +56,22 @@ Main:AddDropdown("DemoDropdown", {
     Values = {"First", "Second", "Third"},
     Default = 1
 })
+
+Main:AddMultiDropdown("DemoTargetParts", {
+    Text = "Target body parts",
+    Values = {
+        "HumanoidRootPart",
+        "Left Hand",
+        "Right Hand",
+        "Head",
+        "Torso"
+    },
+    Default = {"Head", "Right Hand"},
+    MaxSelections = 3,
+    Callback = function(values)
+        print("Selected parts: " .. table.concat(values, ", "))
+    end
+})
 Main:AddButton({
     Text = "Show notification",
     Func = function()
