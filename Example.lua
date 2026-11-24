@@ -13,8 +13,8 @@ local Viewport = Camera and Camera.ViewportSize or Vector2.new(900, 600)
 local WindowWidth = math.min(900, Viewport.X - 32)
 local WindowHeight = math.min(460, Viewport.Y - 48)
 
-local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua?v=20261124"))()
-local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua?v=20261124"))()
+local SaveManager = Library.SaveManager
+local ThemeManager = Library.ThemeManager
 SaveManager:SetLibrary(Library)
 ThemeManager:SetLibrary(Library)
 SaveManager:SetFolder("UIReborn")
