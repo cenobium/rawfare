@@ -557,6 +557,7 @@ do
 
         local SatVibMap = Library:Create('ImageLabel', {
             BorderSizePixel = 0;
+            Active = true;
             Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 18;
             Image = 'rbxassetid://4155801252';
@@ -592,6 +593,7 @@ do
 
         local HueSelectorInner = Library:Create('Frame', {
             BackgroundColor3 = Color3.new(1, 1, 1);
+            Active = true;
             BorderSizePixel = 0;
             Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 18;
@@ -676,6 +678,7 @@ do
 
             TransparencyBoxInner = Library:Create('Frame', {
                 BackgroundColor3 = ColorPicker.Value;
+                Active = true;
                 BorderColor3 = Library.OutlineColor;
                 BorderMode = Enum.BorderMode.Inset;
                 Size = UDim2.new(1, 0, 1, 0);
@@ -948,21 +951,27 @@ do
                 if EndConnection then EndConnection:Disconnect() end
             end
 
-            MoveConnection = InputService.InputChanged:Connect(function(Moved)
-                local Point
-                if IsTouch and Moved.UserInputType == Enum.UserInputType.Touch and Moved.TouchId == TouchId then
-                    Point = Vector2.new(Moved.Position.X, Moved.Position.Y)
-                elseif IsMouse and Moved.UserInputType == Enum.UserInputType.MouseMovement then
-                    Point = Vector2.new(Mouse.X, Mouse.Y)
-                end
-                if not Point then return end
-
+            local function MovePicker(Point)
                 local Viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
                 local Size = PickerFrameOuter.AbsoluteSize
                 local X = math.clamp(Origin.X + Point.X - Start.X, 4, math.max(4, Viewport.X - Size.X - 4))
                 local Y = math.clamp(Origin.Y + Point.Y - Start.Y, 4, math.max(4, Viewport.Y - Size.Y - 4))
                 PickerFrameOuter.Position = UDim2.fromOffset(X, Y)
-            end)
+            end
+
+            if IsTouch then
+                MoveConnection = InputService.TouchMoved:Connect(function(Moved)
+                    if Moved.TouchId == TouchId then
+                        MovePicker(Vector2.new(Moved.Position.X, Moved.Position.Y))
+                    end
+                end)
+            else
+                MoveConnection = InputService.InputChanged:Connect(function(Moved)
+                    if Moved.UserInputType == Enum.UserInputType.MouseMovement then
+                        MovePicker(Vector2.new(Mouse.X, Mouse.Y))
+                    end
+                end)
+            end
 
             EndConnection = InputService.InputEnded:Connect(function(Ended)
                 if IsTouch and Ended.UserInputType == Enum.UserInputType.Touch and Ended.TouchId == TouchId
@@ -1040,13 +1049,19 @@ do
                 Library:AttemptSave()
             end
 
-            MoveConnection = InputService.InputChanged:Connect(function(Movement)
-                if IsMouse and Movement.UserInputType == Enum.UserInputType.MouseMovement then
-                    Update(Vector2.new(Mouse.X, Mouse.Y))
-                elseif IsTouch and Movement.UserInputType == Enum.UserInputType.Touch and Movement.TouchId == TouchId then
-                    Update(Vector2.new(Movement.Position.X, Movement.Position.Y))
-                end
-            end)
+            if IsTouch then
+                MoveConnection = InputService.TouchMoved:Connect(function(Movement)
+                    if Movement.TouchId == TouchId then
+                        Update(Vector2.new(Movement.Position.X, Movement.Position.Y))
+                    end
+                end)
+            else
+                MoveConnection = InputService.InputChanged:Connect(function(Movement)
+                    if Movement.UserInputType == Enum.UserInputType.MouseMovement then
+                        Update(Vector2.new(Mouse.X, Mouse.Y))
+                    end
+                end)
+            end
 
             EndConnection = InputService.InputEnded:Connect(function(Ended)
                 if IsMouse and Ended.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -4410,9 +4425,13 @@ function Library:CreateSettingsTab(Window, Config)
     local Lighting = game:GetService('Lighting')
     local Blur = Lighting:FindFirstChild('UIRebornBlur') or Instance.new('BlurEffect')
     Blur.Name = 'UIRebornBlur'
+    Blur.Size = 0
     Blur.Parent = Lighting
     local ColorEffect = Lighting:FindFirstChild('UIRebornColor') or Instance.new('ColorCorrectionEffect')
     ColorEffect.Name = 'UIRebornColor'
+    ColorEffect.Contrast = 0
+    ColorEffect.Saturation = 0
+    ColorEffect.Brightness = 0
     ColorEffect.Parent = Lighting
     self.SettingsEffects = {Blur, ColorEffect}
 
@@ -4537,7 +4556,7 @@ function Library:CreateFloatingControls()
     Dock.Active = true
     Dock.Parent = DockGui
 
-    local Drag = Instance.new('TextLabel')
+    local Drag = Instance.new('TextButton')
     Drag.Name = 'DragHandle'
     Drag.BackgroundColor3 = self.BackgroundColor
     Drag.BorderSizePixel = 0
@@ -4546,6 +4565,8 @@ function Library:CreateFloatingControls()
     Drag.TextSize = 10
     Drag.TextColor3 = self.FontColor
     Drag.Text = 'UI REBORN CONTROLS'
+    Drag.Active = true
+    Drag.AutoButtonColor = false
     Drag.Parent = Dock
 
     local Toggle = Instance.new('TextButton')
@@ -4591,21 +4612,24 @@ function Library:CreateFloatingControls()
         StartPoint = IsTouch and Vector2.new(Began.Position.X, Began.Position.Y) or Vector2.new(Input:GetMouseLocation().X, Input:GetMouseLocation().Y)
         StartPosition = Dock.AbsolutePosition
     end)
-    self:GiveSignal(Input.InputChanged:Connect(function(Moved)
-        if not Dragging then return end
-        local Point
-        if TouchId and Moved.UserInputType == Enum.UserInputType.Touch and Moved.TouchId == TouchId then
-            Point = Vector2.new(Moved.Position.X, Moved.Position.Y)
-        elseif not TouchId and Moved.UserInputType == Enum.UserInputType.MouseMovement and Input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-            local MousePoint = Input:GetMouseLocation()
-            Point = Vector2.new(MousePoint.X, MousePoint.Y)
-        end
-        if not Point then return end
+    local function MoveDock(Point)
         local Camera = workspace.CurrentCamera
         local Viewport = Camera and Camera.ViewportSize or Vector2.new(800, 600)
         local X = math.clamp(StartPosition.X + Point.X - StartPoint.X, 4, math.max(4, Viewport.X - Dock.AbsoluteSize.X - 4))
         local Y = math.clamp(StartPosition.Y + Point.Y - StartPoint.Y, 4, math.max(4, Viewport.Y - Dock.AbsoluteSize.Y - 4))
         Dock.Position = UDim2.fromOffset(X + Dock.AbsoluteSize.X * 0.5, Y + Dock.AbsoluteSize.Y)
+    end
+
+    self:GiveSignal(Input.TouchMoved:Connect(function(Moved)
+        if Dragging and TouchId and Moved.TouchId == TouchId then
+            MoveDock(Vector2.new(Moved.Position.X, Moved.Position.Y))
+        end
+    end))
+    self:GiveSignal(Input.InputChanged:Connect(function(Moved)
+        if Dragging and not TouchId and Moved.UserInputType == Enum.UserInputType.MouseMovement and Input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            local MousePoint = Input:GetMouseLocation()
+            MoveDock(Vector2.new(MousePoint.X, MousePoint.Y))
+        end
     end))
     self:GiveSignal(Input.InputEnded:Connect(function(Ended)
         if TouchId and Ended.UserInputType == Enum.UserInputType.Touch and Ended.TouchId == TouchId then
