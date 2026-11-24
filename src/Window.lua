@@ -1401,6 +1401,9 @@ function Window.attach(library, settings)
                 gui.Enabled = visible
             end
         end
+        if library.OverlayGui and library.OverlayGui.Parent then
+            library.OverlayGui.Enabled = visible
+        end
         if library.Captures and library.Captures[7] then
             local slot = library.Captures[7]
             slot[3][slot[2]] = visible
