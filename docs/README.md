@@ -126,6 +126,44 @@ Info fields: `Values` (required), `Text`, `Default`, `AllowNull`, `Multi`, `Comp
 - `SpecialType = "Player"` or `"Team"` fills values from current players or teams and permits no selection.
 - Use `Options.AimPart:SetValues(newValues)` to replace the list.
 
+### Dedicated multi-select dropdown
+
+Use `AddMultiDropdown` when an option should accept more than one value. It uses the same dropdown UI and keeps the existing `AddDropdown` single-select behavior unchanged.
+
+```lua
+Aimbot:AddMultiDropdown("TargetParts", {
+    Text = "Target body parts",
+    Values = {
+        "HumanoidRootPart",
+        "Left Hand",
+        "Right Hand",
+        "Head",
+        "Torso"
+    },
+    Default = {"Head", "Right Hand"},
+    MaxSelections = 3,
+    Callback = function(values)
+        print(table.concat(values, ", "))
+    end
+})
+
+local selected = Options.TargetParts:GetSelectedValues()
+Options.TargetParts:SelectAll()
+Options.TargetParts:Clear()
+Options.TargetParts:SetValue({"Head", "Right Hand"})
+Options.TargetParts:SetValues({"Head", "Torso"})
+```
+
+Info fields: `Text`, `Values` (required), `Default` (array or selected-value dictionary), `MaxSelections` (optional positive integer), `Callback`, `Tooltip`, `Compact`, `BlankSize`.
+
+- Callback receives a dictionary such as `{Head = true, ["Right Hand"] = true}`.
+- `GetSelectedValues()` returns an array of selected names for easy `table.concat`.
+- `SelectAll()` selects every available value, respecting `MaxSelections`.
+- `Clear()` clears all selected values.
+- `SetValue(table)` accepts either an array of names or a selected-value dictionary.
+- `SetValues(newValues)` replaces the available choices and rebuilds the list.
+- `MaxSelections` prevents selecting more than the configured number of values.
+
 ### Input
 
 ```lua
