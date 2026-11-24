@@ -45,7 +45,7 @@ right:AddButton({Text = "Run", Func = function() end})
 
 Available groupbox controls: `AddToggle`, `AddSlider`, `AddDropdown`,
 `AddColorPicker`, `AddKeyPicker`, `AddInput`, `AddButton`, `AddLabel`,
-`AddDivider`, `AddBlank`, `AddContainer`, and `AddDependency`.
+`AddDivider`, `AddBlank`, `AddContainer`, `AddDependency`, and `AddButtonGroup`.
 
 Tabs expose `AddLeftGroupbox`, `AddRightGroupbox`, `AddGroupbox`,
 `AddLeftTabbox`, `AddRightTabbox`, and `AddSection`.
@@ -54,4 +54,5 @@ The default window is a small horizontal rectangle (320 × 230). It can be dragg
 
 ## Notes
 
-The window builder uses the original UE library methods plus the `Native.tab`, `Native.tabBox`, `Native.textLabel`, `Native.containerSize`, `Native.dependencies`, and `Native.valueCallbacks` factories. The remaining control adapters use the library's original font, color registry, hover, and callback methods. This repository rebuilds the UI toolkit and demo interface; it does not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
+The window builder uses the original UE library methods plus the `Native.tab`, `Native.tabBox`, `Native.textLabel`, `Native.containerSize`, `Native.dependencies`, `Native.valueCallbacks`, `Native.toggle`, `Native.slider`,
+`Native.dropdown`, `Native.colorPicker`, `Native.keyPicker`, and `Native.buttons` factories. The remaining control adapters use the library's original font, color registry, hover, and callback methods. This repository rebuilds the UI toolkit and demo interface; it does not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
