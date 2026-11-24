@@ -143,3 +143,7 @@ Library:Unload()
 ```
 
 The window can be toggled with RightControl or a two-finger touch gesture.
+
+## Mobile layout and color picker
+
+The example sizes the window from the current viewport. The color picker popup stays inside the visible screen and can be moved by dragging its top strip.
