@@ -2548,6 +2548,16 @@ do
                         if Dropdown:GetActiveValues() == 1 and (not Try) and (not Info.AllowNull) then
                         else
                             if Info.Multi then
+                                if Try and Info.MaxSelections then
+                                    local selectedCount = 0
+                                    for _, selected in pairs(Dropdown.Value) do
+                                        if selected then selectedCount = selectedCount + 1 end
+                                    end
+                                    if selectedCount >= Info.MaxSelections then
+                                        return
+                                    end
+                                end
+
                                 Selected = Try;
 
                                 if Selected then
@@ -2621,11 +2631,26 @@ do
             if Dropdown.Multi then
                 local nTable = {};
 
-                for Value, Bool in next, Val do
-                    if table.find(Dropdown.Values, Value) then
-                        nTable[Value] = true
-                    end;
-                end;
+                if type(Val) == 'table' then
+                    for Key, Value in pairs(Val) do
+                        local SelectedValue
+                        if type(Key) == 'number' then
+                            SelectedValue = Value
+                        elseif Value then
+                            SelectedValue = Key
+                        end
+
+                        if SelectedValue and table.find(Dropdown.Values, SelectedValue) then
+                            if not Info.MaxSelections or (function()
+                                local count = 0
+                                for _ in pairs(nTable) do count = count + 1 end
+                                return count < Info.MaxSelections
+                            end)() then
+                                nTable[SelectedValue] = true
+                            end
+                        end
+                    end
+                end
 
                 Dropdown.Value = nTable;
             else
@@ -2641,6 +2666,26 @@ do
             Library:SafeCallback(Dropdown.Callback, Dropdown.Value);
             Library:SafeCallback(Dropdown.Changed, Dropdown.Value);
         end;
+
+        function Dropdown:GetSelectedValues()
+            return self:GetActiveValues()
+        end
+
+        function Dropdown:Clear()
+            if not self.Multi then return end
+            self:SetValue({})
+        end
+
+        function Dropdown:SelectAll()
+            if not self.Multi then return end
+            local values = {}
+            for _, value in ipairs(self.Values) do
+                if not Info.MaxSelections or #values < Info.MaxSelections then
+                    values[value] = true
+                end
+            end
+            self:SetValue(values)
+        end
 
         DropdownOuter.InputBegan:Connect(function(Input)
             if (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch) and not Library:MouseIsOverOpenedFrame() then
@@ -2707,6 +2752,15 @@ do
         Options[Idx] = Dropdown;
 
         return Dropdown;
+    end;
+
+    function Funcs:AddMultiDropdown(Idx, Info)
+        assert(type(Info) == 'table', 'AddMultiDropdown: Info must be a table.')
+        local Config = table.clone(Info)
+        Config.Multi = true
+        Config.AllowNull = true
+        Config.Default = Config.Default or {}
+        return self:AddDropdown(Idx, Config)
     end;
 
     function Funcs:AddDependencyBox()
