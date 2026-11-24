@@ -1412,6 +1412,10 @@ do
                     local Key;
 
                     if Info.KeyboardOnly and Input.UserInputType ~= Enum.UserInputType.Keyboard then
+                        Break = true
+                        Picking = false
+                        DisplayLabel.Text = KeyPicker.Value
+                        Event:Disconnect()
                         return
                     elseif Input.UserInputType == Enum.UserInputType.Keyboard then
                         Key = Input.KeyCode.Name;
