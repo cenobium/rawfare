@@ -1,5 +1,9 @@
 local Window = {}
 
+local function captureSlot(name, value)
+    return {[2] = name, [3] = {[name] = value}}
+end
+
 local function invoke(library, callback, ...)
     if type(callback) == "function" then
         library:SafeCallback(callback, ...)
@@ -822,24 +826,56 @@ function Window.attach(library, settings)
             Right = right,
             Groupboxes = {},
         }
-        function tab:ShowTab()
-            for _, other in ipairs(window.Tabs) do
-                other.Page.Visible = false
-                other.Button.BackgroundColor3 = library.MainColor
-            end
-            page.Visible = true
-            tabButton.BackgroundColor3 = library.BackgroundColor
-            library.ActiveTab = name
-            return self
-        end
-        function tab:HideTab()
-            page.Visible = false
-            tabButton.BackgroundColor3 = library.MainColor
-            return self
-        end
-        function tab:GetSides()
-            return {Left = left, Right = right}
-        end
+        local indicator = create(library, "Frame", {
+            BackgroundColor3 = library.AccentColor,
+            BorderSizePixel = 0,
+            Position = UDim2.new(0, 0, 1, -2),
+            Size = UDim2.new(1, 0, 0, 2),
+            Visible = false,
+            Parent = tabButton,
+        })
+        register(library, indicator, {BackgroundColor3 = "AccentColor"})
+        local tabStroke = create(library, "UIStroke", {
+            Color = Color3.fromRGB(0, 0, 0),
+            Parent = tabButton,
+        })
+        local warningFrame = create(library, "Frame", {
+            BackgroundColor3 = library.BackgroundColor,
+            BorderColor3 = library.OutlineColor,
+            BorderSizePixel = 1,
+            Position = UDim2.fromOffset(7, 7),
+            Size = UDim2.new(1, -14, 0, 0),
+            Visible = false,
+            Parent = page,
+        })
+        local warningTitle = library:CreateLabel({
+            Position = UDim2.fromOffset(5, 1),
+            Size = UDim2.new(1, -10, 0, 18),
+            Text = "",
+            TextColor3 = library.AccentColor,
+            TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = warningFrame,
+        })
+        local warningText = library:CreateLabel({
+            Position = UDim2.fromOffset(5, 20),
+            Size = UDim2.new(1, -10, 0, 0),
+            Text = "",
+            TextColor3 = library.FontColor,
+            TextSize = 12,
+            TextWrapped = true,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = warningFrame,
+        })
+        local tab = {
+            Name = name,
+            Window = self,
+            Page = page,
+            Button = tabButton,
+            Left = left,
+            Right = right,
+            Groupboxes = {},
+        }
         function tab:AddGroupbox(config)
             local boxName = type(config) == "table" and config.Name or config
             local side = type(config) == "table" and config.Side or 1
@@ -847,33 +883,40 @@ function Window.attach(library, settings)
             table.insert(self.Groupboxes, groupbox)
             return groupbox
         end
-        function tab:AddLeftGroupbox(boxName)
-            return self:AddGroupbox({Name = boxName, Side = 1})
+        function tab:AddTabbox(config)
+            local boxName = type(config) == "table" and config.Name or config
+            local side = type(config) == "table" and config.Side or 1
+            local groupbox = self:AddGroupbox({Name = boxName or "Tabs", Side = side})
+            return groupbox:AddTabbox(boxName)
         end
-        function tab:AddRightGroupbox(boxName)
-            return self:AddGroupbox({Name = boxName, Side = 2})
-        end
-        function tab:AddLeftTabbox(boxName)
-            local box = self:AddLeftGroupbox(boxName or "Tabs")
-            return box:AddTabbox(boxName)
-        end
-        function tab:AddRightTabbox(boxName)
-            local box = self:AddRightGroupbox(boxName or "Tabs")
-            return box:AddTabbox(boxName)
-        end
-        function tab:Remove()
-            page:Destroy()
-            tabButton:Destroy()
+        table.insert(self.Tabs, tab)
+        library.TabOrder = self.Tabs
+        local nativeTab = library.Native and library.Native.tab
+        if type(nativeTab) == "function" then
+            local nativeCaptures = {
+                [0] = library,
+                [1] = library,
+                [2] = tab,
+                [3] = left,
+                [4] = captureSlot("Warning", warningFrame),
+                [5] = right,
+                [6] = tabButton,
+                [7] = tabButton,
+                [8] = page,
+                [9] = captureSlot("Body", warningText),
+                [10] = name,
+                [11] = captureSlot("Title", warningTitle),
+                [12] = library,
+                [13] = indicator,
+                [14] = captureSlot("Container", warningFrame),
+                [15] = tabStroke,
+            }
+            local initializeTab = nativeTab(nativeCaptures)
+            initializeTab()
         end
         tabButton.MouseButton1Click:Connect(function()
             tab:ShowTab()
         end)
-        table.insert(self.Tabs, tab)
-        if #self.Tabs == 1 then
-            tab:ShowTab()
-        else
-            tab:HideTab()
-        end
         tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             local count = math.max(#window.Tabs, 1)
             for index, entry in ipairs(window.Tabs) do
