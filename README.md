@@ -45,7 +45,7 @@ right:AddButton({Text = "Run", Func = function() end})
 
 Available groupbox controls: `AddToggle`, `AddSlider`, `AddDropdown`,
 `AddColorPicker`, `AddKeyPicker`, `AddInput`, `AddButton`, `AddLabel`,
-`AddDivider`, and `AddBlank`.
+`AddDivider`, `AddBlank`, `AddContainer`, and `AddDependency`.
 
 Tabs expose `AddLeftGroupbox`, `AddRightGroupbox`, `AddGroupbox`,
 `AddLeftTabbox`, `AddRightTabbox`, and `AddSection`.
@@ -54,4 +54,4 @@ The default window is a small horizontal rectangle (320 × 230). It can be dragg
 
 ## Notes
 
-The window builder uses the original UE library methods and `Native.tab` factory for tab behavior. The new groupbox/control adapters provide the public UI API; they do not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
+The window builder uses the original UE library methods plus the `Native.tab`, `Native.tabBox`, `Native.textLabel`, `Native.containerSize`, `Native.dependencies`, and `Native.valueCallbacks` factories. The remaining control adapters use the library's original font, color registry, hover, and callback methods. This repository rebuilds the UI toolkit and demo interface; it does not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
