@@ -394,6 +394,7 @@ local function makeGroupbox(tab, name, side)
             display()
             invoke(library, self.Callback, number)
             invoke(library, self.Changed, number)
+            library:UpdateDependencyBoxes()
             return self
         end
         local dragging = false
@@ -466,6 +467,7 @@ local function makeGroupbox(tab, name, side)
             redraw()
             invoke(library, self.Callback, nextValue)
             invoke(library, self.Changed, nextValue)
+            library:UpdateDependencyBoxes()
             return self
         end
         for index, item in ipairs(values) do
@@ -584,6 +586,7 @@ local function makeGroupbox(tab, name, side)
             swatch.BackgroundColor3 = color
             invoke(library, self.Callback, color)
             invoke(library, self.Changed, color)
+            library:UpdateDependencyBoxes()
             return self
         end
         function option:SetValueRGB(color, transparency)
@@ -632,6 +635,7 @@ local function makeGroupbox(tab, name, side)
             end
             keyButton.Text = tostring(self.Value.Name or self.Value)
             invoke(library, self.Changed, self.Value, self.Mode)
+            library:UpdateDependencyBoxes()
             return self
         end
         local listening = false
@@ -728,6 +732,12 @@ local function makeGroupbox(tab, name, side)
                 [10] = row,
             })
             initialize()
+            local nativeSetValue = option.SetValue
+            function option:SetValue(nextValue)
+                nativeSetValue(self, nextValue)
+                library:UpdateDependencyBoxes()
+                return self
+            end
         else
             input.FocusLost:Connect(function()
                 option:SetValue(input.Text)
@@ -737,6 +747,7 @@ local function makeGroupbox(tab, name, side)
                 input.Text = self.Value
                 invoke(library, self.Callback, self.Value)
                 invoke(library, self.Changed, self.Value)
+                library:UpdateDependencyBoxes()
                 return self
             end
         end
