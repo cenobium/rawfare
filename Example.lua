@@ -14,7 +14,7 @@ local Window = Library:CreateWindow({
     AutoShow = true,
     TabPadding = 5,
     MenuFadeTime = 0.15,
-    Size = UDim2.fromOffset(440, 340)
+    Size = UDim2.fromOffset(560, 300)
 })
 
 local Tabs = {
@@ -67,8 +67,20 @@ Right:AddInput("DemoInput", {
 })
 
 local Settings = Tabs.Settings:AddLeftGroupbox("Interface")
-Settings:AddLabel("RightControl toggles the window.")
-Settings:AddLabel("Two-finger touch toggles the window.")
+Settings:AddButton({
+    Text = "Toggle UI",
+    Func = function()
+        Library:Toggle()
+    end
+})
+Settings:AddToggle("LockUI", {
+    Text = "Lock UI position",
+    Default = false,
+    Callback = function(value)
+        Library:SetLocked(value)
+    end
+})
+Settings:AddLabel("RightControl or two-finger touch restores hidden UI.")
 Settings:AddButton({
     Text = "Unload library",
     Func = function()
