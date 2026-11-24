@@ -405,6 +405,9 @@ local function makeGroupbox(tab, name, side)
         local config = type(value) == "table" and value or {Text = value, Min = 0, Max = 100, Default = 0, Callback = callback}
         local min = tonumber(config.Min) or 0
         local max = tonumber(config.Max) or 100
+        if max <= min then
+            max = min + 1
+        end
         local row = addRow(34)
         local title = library:CreateLabel({
             BackgroundTransparency = 1,
