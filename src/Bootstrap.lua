@@ -47,6 +47,7 @@ local function makeLibrary(Native)
     local userInput = game:GetService("UserInputService")
     local runService = game:GetService("RunService")
     local textService = game:GetService("TextService")
+    local tweenService = game:GetService("TweenService")
     local teams = game:GetService("Teams")
     local contextAction = game:GetService("ContextActionService")
     local parent = getParent()
@@ -105,6 +106,8 @@ local function makeLibrary(Native)
         Players = players,
         RunService = runService,
         TextService = textService,
+        TweenService = tweenService,
+        Mouse = mouse,
         Teams = teams,
         ContextActionService = contextAction,
         AssetUrls = assetUrls,
