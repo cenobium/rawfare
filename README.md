@@ -6,8 +6,6 @@ A compact Roblox Luau UI library based on the LinoriaLib architecture.
 
 - `UIReborn.lua` - the library source. Load it to create your own interface.
 - `Example.lua` - a working showcase with tabs, groupboxes and controls.
-- `addons/SaveManager.lua` - config save/load, clipboard and community configs.
-- `addons/ThemeManager.lua` - built-in and custom themes.
 - `docs/README.md` - API and layout guide.
 - `LICENSE` - MIT license and upstream attribution.
 
@@ -34,4 +32,4 @@ Group:AddButton({Text = "Click me", Func = function() Library:Notify("Hello", 2)
 
 See [the documentation](docs/README.md) for controls and layout examples.
 
-The Settings tab includes configuration management, clipboard import/export, community config loading, theme management, menu keybind and transparency, keybind display modes, and background effects. Local config persistence requires executor file APIs. The community config registry starts empty until reviewed entries are added. The showcase includes persistent on-screen Toggle UI and Lock UI controls outside the main window. The floating controls are draggable and share the window lock state. The color picker supports touch input and can be dragged. The two-finger restore gesture is disabled to prevent accidental reopening during gameplay.
+The core library bundles `Library.SaveManager` and `Library.ThemeManager`. The Settings tab includes configuration management, clipboard import/export, community config loading, theme management, menu keybind and transparency, keybind display modes, and background effects. Local config persistence requires executor file APIs. The community config registry starts empty until reviewed entries are added. The showcase includes persistent on-screen Toggle UI and Lock UI controls outside the main window. The floating controls are draggable and share the window lock state. The color picker supports touch input and can be dragged. The two-finger restore gesture is disabled to prevent accidental reopening during gameplay.
