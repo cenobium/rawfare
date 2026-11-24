@@ -119,8 +119,8 @@ Menu:AddDropdown("KeybindMenuMode", {
     Default = "All",
     Callback = function(value)
         Library.KeybindListMode = value
-        if Library.KeybindFrame then
-            Library.KeybindFrame.Visible = value ~= "Active" or true
+        for _, option in pairs(Options) do
+            if option.Type == "KeyPicker" and option.Update then option:Update() end
         end
     end
 })
