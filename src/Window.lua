@@ -1004,9 +1004,20 @@ function Window.attach(library, settings)
         return self.Window:CreateTab(name)
     end
     window.AddSection = function(self, name, side)
-        local tab = self.Tabs[#self.Tabs]
+        local tab
+        for _, candidate in ipairs(self.Tabs) do
+            if candidate.Name == library.ActiveTab then
+                tab = candidate
+                break
+            end
+        end
+        tab = tab or self.Tabs[#self.Tabs]
         assert(tab, "CreateTab must be called first")
         return tab:AddGroupbox({Name = name, Side = side or 1})
+    end
+    library.AddSection = function(self, name, side)
+        assert(self.Window, "CreateWindow must be called first")
+        return self.Window:AddSection(name, side)
     end
     library.ToggleUI = function()
         return window:Toggle()
