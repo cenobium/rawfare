@@ -1,46 +1,55 @@
 # UI Reborn Enhancement
 
-A Roblox Luau interface rebuild using the supplied Rivals UE UI library as
-the visual and component reference.
+A compact, touch-ready Roblox Luau UI library built around the extracted Rivals UE interface source.
 
-The target is the original compact horizontal rectangle, original typography,
-themes, tabs, controls, and touch interactions. This repository is rebuilding
-the UI layer only.
+## Run in Delta
 
-## Current implementation
+Execute the repository entrypoint:
 
-- `src/Bootstrap.lua` creates the base library object, fills verified service
-  captures, extends the library, creates its ScreenGui, and publishes the
-  shared Library/Options/Toggles tables.
-- `src/Tab.lua` and `src/Tabbox.lua` attach the original UE tab factories
-  after validating every required capture slot.
-- `docs/capture-wiring.md` and `docs/factory-captures.md` record verified
-  service mappings, factory capture roles, and unresolved VM call-site values.
+\`\`\`lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/cenobium/rawfare/main/init.lua"))()
+\`\`\`
 
-## Not finished yet
+The entrypoint loads the inline library, installs its bundled fonts and image assets, bootstraps the library, and builds the demo window.
 
-The bootstrap intentionally stops until the remaining VM capture values are
-provided. The original tab and tabbox initializers now have strict adapters;
-the VM's window-construction call site, control factories, configuration/theme
-wiring, and actual menu content still need implementation and Delta testing.
+## Included
 
-## Source package
+- \`Rivals_UE_UI_Library.lua\`: readable extracted UE library.
+- \`Rivals_UE_UI_Library_inline.lua\`: single-file build with embedded assets and Delta folder creation.
+- \`src/Bootstrap.lua\`: service/capture bootstrap, themes, configuration manager, notifications, and cleanup.
+- \`src/Window.lua\`: compact window, original UE tab factory integration, two-column tabs, groupboxes, and controls.
+- \`init.lua\`: runnable entrypoint and interface demo.
 
-The extracted source package supplied for this rebuild contains:
-- `Rivals_UE_UI_Library.lua`
-- `Rivals_UE_UI_Library_inline.lua`
-- `Rivals_UE_themes.json`
-- `Rivals_UE_vm_strings.txt`
-- `assets/`
+## Window API
 
-Keep the clean and inline library variants synchronized when modifying the
-extracted library. Do not modify the original obfuscated source or re-encode
-readable strings.
+\`\`\`lua
+local Library = Bootstrap.start(Native)
+local Window = WindowModule.attach(Library, {
+    Title = "My UI",
+    Width = 320,
+    Height = 230,
+    ToggleKey = Enum.KeyCode.RightControl,
+})
 
-## Design constraints
+local tab = Window:CreateTab("Main")
+local left = tab:AddLeftGroupbox("General")
+local right = tab:AddRightGroupbox("Settings")
 
-- Portrait phone usage, with the UI remaining a horizontal rectangle.
-- Compact default height; resizing remains available.
-- Toggle UI hides the entire interface and restores it when toggled again.
-- Preserve the supplied UE fonts, theme values, and component styling.
-- No invented capture mappings or unverified Delta compatibility claims.
+left:AddToggle({Text = "Enabled", Default = false, Callback = function(value) end})
+left:AddSlider({Text = "Amount", Min = 0, Max = 100, Default = 25})
+left:AddDropdown({Text = "Mode", Values = {"One", "Two"}, Default = "One"})
+right:AddButton({Text = "Run", Func = function() end})
+\`\`\`
+
+Available groupbox controls: \`AddToggle\`, \`AddSlider\`, \`AddDropdown\`,
+\`AddColorPicker\`, \`AddKeyPicker\`, \`AddInput\`, \`AddButton\`, \`AddLabel\`,
+\`AddDivider\`, and \`AddBlank\`.
+
+Tabs expose \`AddLeftGroupbox\`, \`AddRightGroupbox\`, \`AddGroupbox\`,
+\`AddLeftTabbox\`, \`AddRightTabbox\`, and \`AddSection\`.
+
+The default window is a small horizontal rectangle (320 × 230). It can be dragged from the title area, resized from its lower-right corner, and hidden/restored with RightControl. Hiding disables the entire ScreenGui; it does not collapse the window into a bar or icon.
+
+## Notes
+
+The window builder uses the original UE library methods and \`Native.tab\` factory for tab behavior. The new groupbox/control adapters provide the public UI API; they do not recreate the original game's compiled feature callbacks. Delta runtime testing is still required on-device before treating executor compatibility as verified.
