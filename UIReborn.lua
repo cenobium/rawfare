@@ -193,7 +193,7 @@ function Library:MakeDraggable(Instance, Cutoff, Handle)
             local MousePoint = InputService:GetMouseLocation()
             Point = Vector2.new(MousePoint.X, MousePoint.Y)
         end
-        if not ScreenGui.IgnoreGuiInset then
+        if Input.UserInputType ~= Enum.UserInputType.Touch and not ScreenGui.IgnoreGuiInset then
             local Inset = GuiService:GetGuiInset()
             Point = Point - Vector2.new(Inset.X, Inset.Y)
         end
@@ -1036,21 +1036,16 @@ do
             else
                 local Position = InputService:GetMouseLocation()
                 Point = Vector2.new(Position.X, Position.Y)
-            end
-            if not ScreenGui.IgnoreGuiInset then
-                local Inset = GuiService:GetGuiInset()
-                Point = Point - Vector2.new(Inset.X, Inset.Y)
+                if not ScreenGui.IgnoreGuiInset then
+                    local Inset = GuiService:GetGuiInset()
+                    Point = Point - Vector2.new(Inset.X, Inset.Y)
+                end
             end
             return Point
         end
 
         local function GetColorMovementPosition(Input)
-            local Point = Vector2.new(Input.Position.X, Input.Position.Y)
-            if not ScreenGui.IgnoreGuiInset then
-                local Inset = GuiService:GetGuiInset()
-                Point = Point - Vector2.new(Inset.X, Inset.Y)
-            end
-            return Point
+            return Vector2.new(Input.Position.X, Input.Position.Y)
         end
 
         local function IsInside(Instance, Point)
