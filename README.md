@@ -55,7 +55,7 @@ Available groupbox controls: `AddToggle`, `AddSlider`, `AddDropdown`,
 Tabs expose `AddLeftGroupbox`, `AddRightGroupbox`, `AddGroupbox`,
 `AddLeftTabbox`, `AddRightTabbox`, and `AddSection`.
 
-The default window is a small horizontal rectangle (320 × 230). It can be dragged from the title area, resized from its lower-right corner, and hidden/restored with RightControl. Hiding disables the main interface, drag overlay, and tracked popouts; it does not collapse the window into a bar or icon.
+The default window is a small horizontal rectangle (320 × 230). It can be dragged from the title area, resized from its lower-right corner, and hidden/restored with RightControl or a two-finger touch. Hiding disables the main interface, drag overlay, and tracked popouts; it does not collapse the window into a bar or icon.
 
 ## Notes
 
