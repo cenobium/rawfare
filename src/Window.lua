@@ -174,6 +174,41 @@ local function makeGroupbox(tab, name, side)
         self:Resize()
         return line
     end
+    function groupbox:AddContainer(height)
+        local outer = addRow(height or 50)
+        outer.BackgroundColor3 = library.BackgroundColor
+        outer.BorderColor3 = library.OutlineColor
+        outer.BorderSizePixel = 1
+        register(library, outer, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor"})
+        local inner = create(library, "Frame", {
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(3, 3),
+            Size = UDim2.new(1, -6, 1, -6),
+            Parent = outer,
+        })
+        local object = {}
+        local containerFactory = library.Native and library.Native.containerSize
+        assert(type(containerFactory) == "function", "Native.containerSize factory missing")
+        local initialize = containerFactory({
+            [0] = inner,
+            [1] = outer,
+            [2] = groupbox,
+            [3] = object,
+            [4] = groupbox,
+        })
+        initialize()
+        function object:Create(className, properties)
+            properties = properties or {}
+            properties.Parent = inner
+            return create(library, className, properties)
+        end
+        function object:Remove()
+            outer:Destroy()
+            groupbox:Resize()
+        end
+        groupbox:Resize()
+        return object
+    end
     function groupbox:AddLabel(value)
         local text = type(value) == "table" and value.Text or value
         local row = addRow(19)
@@ -188,13 +223,34 @@ local function makeGroupbox(tab, name, side)
             Parent = row,
         })
         local object = {Label = label, Outer = row}
-        function object:SetText(nextText)
-            label.Text = tostring(nextText)
-            return self
-        end
-        function object:Remove()
-            row:Destroy()
-            groupbox:Resize()
+        local textFactory = library.Native and library.Native.textLabel
+        if type(textFactory) == "function" then
+            local initialize = textFactory({
+                [0] = groupbox,
+                [1] = {},
+                [2] = library,
+                [3] = label,
+                [4] = object,
+                [5] = false,
+            })
+            initialize()
+            local originalRemove = object.Remove
+            function object:Remove()
+                if originalRemove then
+                    originalRemove(self)
+                end
+                row:Destroy()
+                groupbox:Resize()
+            end
+        else
+            function object:SetText(nextText)
+                label.Text = tostring(nextText)
+                return self
+            end
+            function object:Remove()
+                row:Destroy()
+                groupbox:Resize()
+            end
         end
         self:Resize()
         return object
