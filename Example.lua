@@ -139,7 +139,42 @@ end
 local ToggleButton = MakeDockButton("ToggleUI", "HIDE / SHOW", 3)
 local LockButton = MakeDockButton("LockUI", "LOCK: OFF", 79)
 
-Library:MakeDraggable(Dock, 22)
+DockTitle.Active = true
+DockTitle.InputBegan:Connect(function(Input)
+    local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
+    if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and not IsTouch then
+        return
+    end
+    if Library.Locked then
+        return
+    end
+
+    local Start = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Library.Mouse.X, Library.Mouse.Y)
+    local Origin = Dock.AbsolutePosition
+    local Dragging = true
+    local EndConnection
+    if IsTouch then
+        EndConnection = Input.Changed:Connect(function()
+            if Input.UserInputState == Enum.UserInputState.End or Input.UserInputState == Enum.UserInputState.Cancel then
+                Dragging = false
+            end
+        end)
+    end
+
+    repeat
+        local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Library.Mouse.X, Library.Mouse.Y)
+        local Camera = workspace.CurrentCamera
+        local Viewport = Camera and Camera.ViewportSize or Vector2.new(800, 600)
+        local X = math.clamp(Origin.X + Point.X - Start.X, 4, math.max(4, Viewport.X - Dock.AbsoluteSize.X - 4))
+        local Y = math.clamp(Origin.Y + Point.Y - Start.Y, 4, math.max(4, Viewport.Y - Dock.AbsoluteSize.Y - 4))
+        Dock.Position = UDim2.fromOffset(X + Dock.AbsoluteSize.X * 0.5, Y + Dock.AbsoluteSize.Y)
+        game:GetService("RunService").RenderStepped:Wait()
+    until (IsTouch and not Dragging) or (not IsTouch and not game:GetService("UserInputService"):IsMouseButtonPressed(Enum.UserInputType.MouseButton1))
+
+    if EndConnection then
+        EndConnection:Disconnect()
+    end
+end)
 
 ToggleButton.Activated:Connect(function()
     Library:Toggle()
