@@ -635,7 +635,7 @@ local function makeGroupbox(tab, name, side)
     end
     function groupbox:AddTabbox(tabName)
         local frame = create(library, "Frame", {
-            Name = tostring(tabName or "Tabbox"),
+            Name = tostring(tab.Window.Library.ActiveTab or "Tab") .. "_" .. tostring(tabName or "Tabbox"),
             BackgroundColor3 = library.BackgroundColor,
             BorderColor3 = library.OutlineColor,
             BorderSizePixel = 1,
@@ -668,6 +668,12 @@ local function makeGroupbox(tab, name, side)
         end
         local nativeTabbox = library.Native and library.Native.tabBox
         assert(type(nativeTabbox) == "function", "Native.tabBox factory missing")
+        local borderSlot = captureSlot("OutlineColor", library.OutlineColor)
+        borderSlot[3] = setmetatable({}, {
+            __index = function(_, key)
+                return library[key]
+            end,
+        })
         local initialize = nativeTabbox({
             [0] = library,
             [1] = captureSlot("Frame", "Frame"),
@@ -678,7 +684,7 @@ local function makeGroupbox(tab, name, side)
             [6] = frame,
             [7] = body,
             [8] = library,
-            [9] = captureSlot("OutlineColor", library.OutlineColor),
+            [9] = borderSlot,
         })
         initialize()
         local originalAddTab = tabContainer.AddTab
