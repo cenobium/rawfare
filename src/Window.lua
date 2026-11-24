@@ -59,6 +59,7 @@ local function makeOption(library, groupbox, name, kind, default, callback)
         Changed = nil,
         Flag = flag,
         Parent = groupbox,
+        Groupbox = groupbox,
     }
     function option:OnChanged(fn)
         self.Changed = fn
