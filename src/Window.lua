@@ -903,6 +903,9 @@ function Window.attach(library, settings)
             local groupbox = self:AddGroupbox({Name = boxName or "Tabs", Side = side})
             return groupbox:AddTabbox(boxName)
         end
+        function tab:AddSection(config)
+            return self:AddGroupbox(config)
+        end
         table.insert(self.Tabs, tab)
         library.TabOrder = self.Tabs
         local nativeTab = library.Native and library.Native.tab
@@ -957,6 +960,21 @@ function Window.attach(library, settings)
     end)
     library:GiveSignal(toggleConnection)
     library.Window = window
+    library.CreateWindow = function(self, config)
+        if self.Window and self.Window.Root and self.Window.Root.Parent then
+            return self.Window
+        end
+        return Window.attach(self, config)
+    end
+    library.CreateTab = function(self, name)
+        assert(self.Window, "CreateWindow must be called first")
+        return self.Window:CreateTab(name)
+    end
+    window.AddSection = function(self, name, side)
+        local tab = self.Tabs[#self.Tabs]
+        assert(tab, "CreateTab must be called first")
+        return tab:AddGroupbox({Name = name, Side = side or 1})
+    end
     library.ToggleUI = function()
         return window:Toggle()
     end
