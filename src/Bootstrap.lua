@@ -60,14 +60,7 @@ local function makeLibrary(Native)
             assetUrls = result
         end
     end
-    local font = Font.new("rbxasset://fonts/families/SourceSansPro.json")
-    local titleAsset = assetUrls["BurbankBigCondensed-Black.otf"]
-    if titleAsset then
-        local ok, result = pcall(Font.new, titleAsset)
-        if ok then
-            font = result
-        end
-    end
+    local font = Enum.Font.SourceSans
     local library = {
         Unnamed = "UI Reborn Enhancement",
         Font = font,
