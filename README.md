@@ -25,6 +25,11 @@ The entrypoint loads the inline library, installs its bundled fonts and image as
 ## Window API
 
 ```lua
+local base = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
+local Native = loadstring(game:HttpGet(base .. "Rivals_UE_UI_Library_inline.lua"))()
+local Bootstrap = loadstring(game:HttpGet(base .. "src/Bootstrap.lua"))()
+local WindowModule = loadstring(game:HttpGet(base .. "src/Window.lua"))()
+
 local Library = Bootstrap.start(Native)
 local Window = WindowModule.attach(Library, {
     Title = "My UI",
@@ -50,7 +55,7 @@ Available groupbox controls: `AddToggle`, `AddSlider`, `AddDropdown`,
 Tabs expose `AddLeftGroupbox`, `AddRightGroupbox`, `AddGroupbox`,
 `AddLeftTabbox`, `AddRightTabbox`, and `AddSection`.
 
-The default window is a small horizontal rectangle (320 × 230). It can be dragged from the title area, resized from its lower-right corner, and hidden/restored with RightControl. Hiding disables the entire ScreenGui; it does not collapse the window into a bar or icon.
+The default window is a small horizontal rectangle (320 × 230). It can be dragged from the title area, resized from its lower-right corner, and hidden/restored with RightControl. Hiding disables the main interface, drag overlay, and tracked popouts; it does not collapse the window into a bar or icon.
 
 ## Notes
 
