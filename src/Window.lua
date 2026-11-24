@@ -951,7 +951,11 @@ local function makeGroupbox(tab, name, side)
         option.ChangedCallback = config.ChangedCallback
         option.Connections = {}
         option.Idx = option.Flag
-        option.Parent = {Addons = {}, Type = "KeyPicker"}
+        local parentOption = config.Parent
+        if type(parentOption) ~= "table" or type(parentOption.Addons) ~= "table" then
+            parentOption = {Addons = {}, Type = "KeyPicker"}
+        end
+        option.Parent = parentOption
         local keypickerFactory = library.Native and library.Native.keyPicker
         assert(type(keypickerFactory) == "function", "Native.keyPicker factory missing")
         local initialize = keypickerFactory({
