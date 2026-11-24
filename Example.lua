@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=direct-touch-picker-fix-20261124"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=touch-window-picker-fix-20261124"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
