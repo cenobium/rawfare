@@ -78,7 +78,7 @@ end
 local function makeGroupbox(tab, name, side)
     local library = tab.Window.Library
     local window = tab.Window
-    side = side == 2 or side == "Right" and 2 or 1
+    side = (side == 2 or side == "Right") and 2 or 1
     local column = side == 2 and tab.Right or tab.Left
     local outer = create(library, "Frame", {
         BackgroundColor3 = library.MainColor,
