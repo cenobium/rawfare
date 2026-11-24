@@ -141,42 +141,6 @@ function Window.new(options)
     }, root)
     self.Content = content
 
-    local left = make("ScrollingFrame", {
-        Name = "LeftColumn",
-        Size = UDim2.new(0.5, -5, 1, 0),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        ScrollBarThickness = 3,
-        ScrollBarImageColor3 = self.Options.Accent,
-        CanvasSize = UDim2.new(),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y
-    }, content)
-    self.LeftColumn = left
-
-    local right = make("ScrollingFrame", {
-        Name = "RightColumn",
-        Position = UDim2.new(0.5, 5, 0, 0),
-        Size = UDim2.new(0.5, -5, 1, 0),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        ScrollBarThickness = 3,
-        ScrollBarImageColor3 = self.Options.Accent,
-        CanvasSize = UDim2.new(),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y
-    }, content)
-    self.RightColumn = right
-
-    for _, column in ipairs({left, right}) do
-        make("UIListLayout", {
-            SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 8)
-        }, column)
-        make("UIPadding", {
-            PaddingRight = UDim.new(0, 5),
-            PaddingBottom = UDim.new(0, 4)
-        }, column)
-    end
-
     local grip = make("TextButton", {
         Name = "ResizeGrip",
         AnchorPoint = Vector2.new(1, 1),
@@ -335,7 +299,32 @@ function Window:CreateTab(name)
         Visible = false
     }, self.Content)
 
-    local tab = {Name = name, Button = tabButton, Page = page}
+    local function createColumn(columnName, position)
+        local column = make("ScrollingFrame", {
+            Name = columnName,
+            Position = position,
+            Size = UDim2.new(0.5, -5, 1, 0),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 3,
+            ScrollBarImageColor3 = self.Options.Accent,
+            CanvasSize = UDim2.new(),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y
+        }, page)
+        make("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 8)
+        }, column)
+        make("UIPadding", {
+            PaddingRight = UDim.new(0, 5),
+            PaddingBottom = UDim.new(0, 4)
+        }, column)
+        return column
+    end
+
+    local left = createColumn("LeftColumn", UDim2.fromOffset(0, 0))
+    local right = createColumn("RightColumn", UDim2.new(0.5, 5, 0, 0))
+    local tab = {Name = name, Button = tabButton, Page = page, Left = left, Right = right}
     table.insert(self.Tabs, tab)
 
     tabButton.Activated:Connect(function()
@@ -366,7 +355,11 @@ function Window:SetVisible(state)
     if self.Destroyed then
         return
     end
-    self.Visible = state == nil and not self.Visible or state
+    if state == nil then
+        self.Visible = not self.Visible
+    else
+        self.Visible = state
+    end
     self.Screen.Enabled = self.Visible
 end
 
