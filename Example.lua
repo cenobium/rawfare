@@ -70,10 +70,10 @@ Right:AddLabel("Accent color"):AddColorPicker("DemoColor", {
         Library:UpdateColorsUsingRegistry()
     end
 })
-Right:AddLabel("Menu key"):AddKeyPicker("MenuKey", {
+Right:AddLabel("Key picker"):AddKeyPicker("DemoKey", {
     Default = "RightControl",
     Mode = "Toggle",
-    Text = "Toggle interface",
+    Text = "Demo key",
     NoUI = true
 })
 Right:AddInput("DemoInput", {
