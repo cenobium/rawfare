@@ -141,7 +141,6 @@ Aimbot:AddMultiDropdown("TargetParts", {
         "Torso"
     },
     Default = {"Head", "Right Hand"},
-    MaxSelections = 3,
     Callback = function(values)
         print(table.concat(values, ", "))
     end
@@ -154,15 +153,14 @@ Options.TargetParts:SetValue({"Head", "Right Hand"})
 Options.TargetParts:SetValues({"Head", "Torso"})
 ```
 
-Info fields: `Text`, `Values` (required), `Default` (array or selected-value dictionary), `MaxSelections` (optional positive integer), `Callback`, `Tooltip`, `Compact`, `BlankSize`.
+Info fields: `Text`, `Values` (required), `Default` (array or selected-value dictionary), `Callback`, `Tooltip`, `Compact`, `BlankSize`.
 
 - Callback receives a dictionary such as `{Head = true, ["Right Hand"] = true}`.
 - `GetSelectedValues()` returns an array of selected names for easy `table.concat`.
-- `SelectAll()` selects every available value, respecting `MaxSelections`.
+- `SelectAll()` selects every available value.
 - `Clear()` clears all selected values.
 - `SetValue(table)` accepts either an array of names or a selected-value dictionary.
 - `SetValues(newValues)` replaces the available choices and rebuilds the list.
-- `MaxSelections` prevents selecting more than the configured number of values.
 
 ### Input
 
