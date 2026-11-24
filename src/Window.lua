@@ -130,6 +130,7 @@ local function makeGroupbox(tab, name, side)
         Window = window,
         Side = side,
         Controls = {},
+        NestedGroupboxes = {},
     }
     function groupbox:Resize()
         local height = layout.AbsoluteContentSize.Y
