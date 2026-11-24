@@ -454,3 +454,6 @@ Run these in the Roblox client with the target executor. Static source checks do
 10. Unload the library. Confirm the floating dock, main ScreenGui, and Settings lighting effects are removed.
 
 Do not mark these runtime checks complete until they have been exercised in the target Roblox client and executor.
+
+
+Mobile input uses dedicated touch-move tracking for the color picker, picker drag handle, and floating controls. Background effects initialize to neutral values, including blur size zero.
