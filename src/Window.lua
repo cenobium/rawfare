@@ -626,7 +626,7 @@ local function makeGroupbox(tab, name, side)
     function groupbox:AddInput(value, callback)
         local config = type(value) == "table" and value or {Text = value, Default = "", Callback = callback}
         local row = addRow(23)
-        local title = library:CreateLabel({
+        library:CreateLabel({
             BackgroundTransparency = 1,
             Position = UDim2.fromOffset(2, 0),
             Size = UDim2.new(0.42, 0, 1, 0),
@@ -651,23 +651,97 @@ local function makeGroupbox(tab, name, side)
         })
         register(library, input, {BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor", TextColor3 = "FontColor"})
         local option = makeOption(library, groupbox, config.Flag or config.Text or config.Name or "Input", "Input", input.Text, config.Callback or callback)
-        input.FocusLost:Connect(function()
-            option:SetValue(input.Text)
-        end)
-        function option:SetValue(nextValue)
-            self.Value = tostring(nextValue or "")
-            input.Text = self.Value
-            invoke(library, self.Callback, self.Value)
-            invoke(library, self.Changed, self.Value)
-            return self
-        end
-        function option:Remove()
-            row:Destroy()
-            library.Options[self.Flag] = nil
-            groupbox:Resize()
+        local valueFactory = library.Native and library.Native.valueCallbacks
+        if type(valueFactory) == "function" then
+            local initialize = valueFactory({
+                [0] = option,
+                [1] = input,
+                [2] = {
+                    MaxLength = config.MaxLength,
+                    Numeric = config.Numeric,
+                    Finished = config.Finished ~= false,
+                },
+                [3] = library.Options,
+                [4] = library,
+                [5] = option.Flag,
+                [6] = groupbox,
+                [7] = {},
+                [8] = library.TextService,
+                [9] = row,
+                [10] = row,
+            })
+            initialize()
+        else
+            input.FocusLost:Connect(function()
+                option:SetValue(input.Text)
+            end)
+            function option:SetValue(nextValue)
+                self.Value = tostring(nextValue or "")
+                input.Text = self.Value
+                invoke(library, self.Callback, self.Value)
+                invoke(library, self.Changed, self.Value)
+                return self
+            end
         end
         self:Resize()
         return option
+    end
+    function groupbox:AddDependency(dependencies, name)
+        local container = create(library, "Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 0),
+            Visible = false,
+            Parent = content,
+        })
+        local dependencyLayout = create(library, "UIListLayout", {
+            FillDirection = Enum.FillDirection.Vertical,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 4),
+            Parent = container,
+        })
+        local dependency = {}
+        local dependencyFactory = library.Native and library.Native.dependencies
+        assert(type(dependencyFactory) == "function", "Native.dependencies factory missing")
+        local initialize = dependencyFactory({
+            [0] = library,
+            [1] = dependency,
+            [2] = {},
+            [3] = container,
+            [4] = groupbox,
+            [5] = container,
+            [6] = dependencyLayout,
+        })
+        initialize()
+        local adapter = {
+            Window = window,
+            Left = container,
+            Right = container,
+            ResizePanel = function()
+                groupbox:Resize()
+            end,
+        }
+        dependency.Groupbox = makeGroupbox(adapter, name or "Dependent controls", 1)
+        dependency.Groupbox.Outer.Parent = container
+        for _, method in ipairs({
+            "AddToggle",
+            "AddSlider",
+            "AddDropdown",
+            "AddColorPicker",
+            "AddKeyPicker",
+            "AddInput",
+            "AddButton",
+            "AddLabel",
+            "AddDivider",
+            "AddBlank",
+        }) do
+            local methodName = method
+            dependency[methodName] = function(self, ...)
+                return self.Groupbox[methodName](self.Groupbox, ...)
+            end
+        end
+        dependency:SetupDependencies(dependencies or {})
+        groupbox:Resize()
+        return dependency
     end
     function groupbox:AddTabbox(tabName)
         local frame = create(library, "Frame", {
