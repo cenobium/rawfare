@@ -136,9 +136,12 @@ local function makeGroupbox(tab, name, side)
         outer.Size = UDim2.new(1, -2, 0, height + 31)
         for _, columnFrame in ipairs({tab.Left, tab.Right}) do
             local columnLayout = columnFrame:FindFirstChildOfClass("UIListLayout")
-            if columnLayout then
+            if columnLayout and columnFrame:IsA("ScrollingFrame") then
                 columnFrame.CanvasSize = UDim2.fromOffset(0, columnLayout.AbsoluteContentSize.Y + 8)
             end
+        end
+        if type(tab.ResizePanel) == "function" then
+            tab:ResizePanel()
         end
     end
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -632,6 +635,7 @@ local function makeGroupbox(tab, name, side)
     end
     function groupbox:AddTabbox(tabName)
         local frame = create(library, "Frame", {
+            Name = tostring(tabName or "Tabbox"),
             BackgroundColor3 = library.BackgroundColor,
             BorderColor3 = library.OutlineColor,
             BorderSizePixel = 1,
@@ -650,38 +654,67 @@ local function makeGroupbox(tab, name, side)
             Size = UDim2.new(1, -8, 1, -24),
             Parent = frame,
         })
-        local tabbox = {Frame = frame, Tabs = {}, Active = nil}
-        function tabbox:AddTab(label)
-            local tabButton = button(library, tabs, label, UDim2.new(1 / math.max(#self.Tabs + 1, 1), 0, 1, 0), UDim2.new())
-            local page = create(library, "Frame", {
+        local tabContainer = {Tabs = {}}
+        local panelMeta = {__index = {}}
+        function panelMeta.__index:AddBlank(height)
+            local blank = create(library, "Frame", {
                 BackgroundTransparency = 1,
-                Size = UDim2.fromScale(1, 1),
-                Visible = false,
-                Parent = body,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, 0, 0, tonumber(height) or 3),
+                Parent = self.Container,
             })
-            local pageLayout = create(library, "UIListLayout", {Padding = UDim.new(0, 4), Parent = page})
-            local child = makeGroupbox(tab, label, side)
-            child.Outer.Parent = page
-            child.Outer.Size = UDim2.new(1, -2, 0, 38)
-            local entry = {Button = tabButton, Page = page, Groupbox = child}
-            function entry:Show()
-                for _, other in ipairs(tabbox.Tabs) do
-                    other.Page.Visible = false
+            self:Resize()
+            return blank
+        end
+        local nativeTabbox = library.Native and library.Native.tabBox
+        assert(type(nativeTabbox) == "function", "Native.tabBox factory missing")
+        local initialize = nativeTabbox({
+            [0] = library,
+            [1] = captureSlot("Frame", "Frame"),
+            [2] = tabs,
+            [3] = tabContainer,
+            [4] = frame,
+            [5] = panelMeta,
+            [6] = frame,
+            [7] = body,
+            [8] = library,
+            [9] = captureSlot("OutlineColor", library.OutlineColor),
+        })
+        initialize()
+        local originalAddTab = tabContainer.AddTab
+        function tabContainer:AddTab(label, selected)
+            local panel = originalAddTab(self, label, selected)
+            local adapter = {
+                Window = window,
+                Left = panel.Container,
+                Right = panel.Container,
+                ResizePanel = function()
+                    panel:Resize()
+                end,
+            }
+            panel.Groupbox = makeGroupbox(adapter, label, 1)
+            panel.Groupbox.Outer.Parent = panel.Container
+            panel:Resize()
+            for _, method in ipairs({
+                "AddToggle",
+                "AddSlider",
+                "AddDropdown",
+                "AddColorPicker",
+                "AddKeyPicker",
+                "AddInput",
+                "AddButton",
+                "AddLabel",
+                "AddDivider",
+                "AddBlank",
+            }) do
+                panelMeta.__index[method] = panelMeta.__index[method] or function(self, ...)
+                    return self.Groupbox[method](self.Groupbox, ...)
                 end
-                page.Visible = true
-                tabbox.Active = entry
             end
-            tabButton.MouseButton1Click:Connect(function()
-                entry:Show()
-            end)
-            table.insert(self.Tabs, entry)
-            if not self.Active then
-                entry:Show()
-            end
-            return child
+            return panel
         end
         self:Resize()
-        return tabbox
+        return tabContainer
     end
     function groupbox:Remove()
         outer:Destroy()
