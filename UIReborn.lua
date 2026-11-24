@@ -2548,16 +2548,6 @@ do
                         if Dropdown:GetActiveValues() == 1 and (not Try) and (not Info.AllowNull) then
                         else
                             if Info.Multi then
-                                if Try and Info.MaxSelections then
-                                    local selectedCount = 0
-                                    for _, selected in pairs(Dropdown.Value) do
-                                        if selected then selectedCount = selectedCount + 1 end
-                                    end
-                                    if selectedCount >= Info.MaxSelections then
-                                        return
-                                    end
-                                end
-
                                 Selected = Try;
 
                                 if Selected then
@@ -2641,13 +2631,7 @@ do
                         end
 
                         if SelectedValue and table.find(Dropdown.Values, SelectedValue) then
-                            if not Info.MaxSelections or (function()
-                                local count = 0
-                                for _ in pairs(nTable) do count = count + 1 end
-                                return count < Info.MaxSelections
-                            end)() then
-                                nTable[SelectedValue] = true
-                            end
+                            nTable[SelectedValue] = true
                         end
                     end
                 end
@@ -2680,9 +2664,7 @@ do
             if not self.Multi then return end
             local values = {}
             for _, value in ipairs(self.Values) do
-                if not Info.MaxSelections or #values < Info.MaxSelections then
-                    values[value] = true
-                end
+                values[value] = true
             end
             self:SetValue(values)
         end
