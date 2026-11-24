@@ -92,10 +92,52 @@ appearance:AddSlider({
     end,
 })
 
+local controls = main:AddLeftGroupbox("Control Showcase")
+controls:AddToggle({
+    Text = "Example toggle",
+    Flag = "Demo_Toggle",
+    Default = false,
+})
+controls:AddSlider({
+    Text = "Example slider",
+    Flag = "Demo_Slider",
+    Min = 0,
+    Max = 100,
+    Default = 35,
+})
+controls:AddDropdown({
+    Text = "Example dropdown",
+    Flag = "Demo_Dropdown",
+    Values = {"First", "Second", "Third"},
+    Default = "First",
+})
+controls:AddColorPicker({
+    Text = "Example color",
+    Flag = "Demo_Color",
+    Default = Color3.fromRGB(162, 205, 255),
+})
+controls:AddKeyPicker({
+    Text = "Example key",
+    Flag = "Demo_Key",
+    Default = Enum.KeyCode.G,
+})
+controls:AddInput({
+    Text = "Example input",
+    Flag = "Demo_Input",
+    Default = "Type here",
+})
+
+local profileTabs = main:AddLeftTabbox("Profiles")
+local standardProfile = profileTabs:AddTab("Standard")
+standardProfile:AddLabel("Original UE tabbox factory")
+standardProfile:AddToggle({Text = "Profile enabled", Default = true})
+local compactProfile = profileTabs:AddTab("Compact")
+compactProfile:AddLabel("Touch-ready tab panels")
+
 local settings = UI:CreateTab("Settings")
-local controls = settings:AddLeftGroupbox("Controls")
-controls:AddLabel("Drag the title area to move the window")
-controls:AddLabel("Use the bottom-right corner to resize")
-controls:AddLabel("Press RightControl to hide or restore it")
+local help = settings:AddLeftGroupbox("Controls")
+help:AddLabel("Drag the title area to move the window")
+help:AddLabel("Use the bottom-right corner to resize")
+help:AddLabel("Press RightControl to hide or restore it")
 
 print("[UI Reborn Enhancement] loaded")
