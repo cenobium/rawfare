@@ -59,11 +59,13 @@ function Bootstrap.start(Native, bindings)
     assert(type(extendLibrary) == "function", "Native.library did not return its extension function")
     extendLibrary()
 
-    local parent = bindings.Parent
-    if not parent then
+    local parent = captures[10]
+    if parent == nil then
         local getHidden = gethui
         parent = type(getHidden) == "function" and getHidden() or getService("CoreGui")
     end
+
+    library.Captures = captures
 
     library.ScreenGui = library:Create("ScreenGui", {
         Name = "UI Reborn Enhancement",
