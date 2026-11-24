@@ -1,5 +1,5 @@
 local repo = "https://raw.githubusercontent.com/cenobium/rawfare/main/"
-local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124touchslider3"))()
+local Library = loadstring(game:HttpGet(repo .. "UIReborn.lua?v=20261124touchslider4"))()
 
 Library.Font = Enum.Font.Gotham
 Library.MainColor = Color3.fromRGB(18, 18, 18)
@@ -165,7 +165,7 @@ DockTitle.InputBegan:Connect(function(Input)
     end
 
     repeat
-        local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or Vector2.new(Library.Mouse.X, Library.Mouse.Y)
+        local Point = IsTouch and Vector2.new(Input.Position.X, Input.Position.Y) or DockInputService:GetMouseLocation()
         local Camera = workspace.CurrentCamera
         local Viewport = Camera and Camera.ViewportSize or Vector2.new(800, 600)
         local X = math.clamp(Origin.X + Point.X - Start.X, 4, math.max(4, Viewport.X - Dock.AbsoluteSize.X - 4))
