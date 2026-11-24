@@ -1022,6 +1022,28 @@ function Window.attach(library, settings)
     function window:Toggle()
         return self:SetVisible(not library.ScreenGui.Enabled)
     end
+    function window:SetTitle(value)
+        title.Text = tostring(value or "")
+        return self
+    end
+    function window:SetSize(nextWidth, nextHeight)
+        local current = root.Size
+        local nextW = math.clamp(tonumber(nextWidth) or current.X.Offset, 280, 620)
+        local nextH = math.clamp(tonumber(nextHeight) or current.Y.Offset, 180, 520)
+        root.Size = UDim2.fromOffset(nextW, nextH)
+        return self
+    end
+    function window:GetSize()
+        return root.AbsoluteSize
+    end
+    function window:SetPosition(position)
+        assert(typeof(position) == "UDim2", "SetPosition expects UDim2")
+        root.Position = position
+        return self
+    end
+    function window:GetPosition()
+        return root.Position
+    end
     function window:Unload()
         library:Unload()
     end
